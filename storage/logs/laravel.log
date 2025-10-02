@@ -71,3 +71,151 @@
 #7 /var/www/artisan(12): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #8 {main}
 "} 
+[2025-10-02 17:48:09] laravel.EMERGENCY: Unable to create configured logger. Using emergency logger. {"exception":"[object] (InvalidArgumentException(code: 0): Log [] is not defined. at /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php:212)
+[stacktrace]
+#0 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(137): Illuminate\\Log\\LogManager->resolve(NULL, NULL)
+#1 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(124): Illuminate\\Log\\LogManager->get(NULL)
+#2 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(681): Illuminate\\Log\\LogManager->driver()
+#3 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(317): Illuminate\\Log\\LogManager->error('Command \"make:c...', Array)
+#4 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(278): Illuminate\\Foundation\\Exceptions\\Handler->reportThrowable(Object(Symfony\\Component\\Console\\Exception\\CommandNotFoundException))
+#5 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(523): Illuminate\\Foundation\\Exceptions\\Handler->report(Object(Symfony\\Component\\Console\\Exception\\CommandNotFoundException))
+#6 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(203): Illuminate\\Foundation\\Console\\Kernel->reportException(Object(Symfony\\Component\\Console\\Exception\\CommandNotFoundException))
+#7 /var/www/artisan(12): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#8 {main}
+"} 
+[2025-10-02 17:48:09] laravel.ERROR: Command "make:class" is not defined.
+
+Did you mean one of these?
+    make:cast
+    make:channel
+    make:command
+    make:component
+    make:controller
+    make:event
+    make:exception
+    make:factory
+    make:job
+    make:listener
+    make:mail
+    make:middleware
+    make:migration
+    make:model
+    make:notification
+    make:observer
+    make:policy
+    make:provider
+    make:request
+    make:resource
+    make:rule
+    make:scope
+    make:seeder
+    make:test
+    make:view {"exception":"[object] (Symfony\\Component\\Console\\Exception\\CommandNotFoundException(code: 0): Command \"make:class\" is not defined.
+
+Did you mean one of these?
+    make:cast
+    make:channel
+    make:command
+    make:component
+    make:controller
+    make:event
+    make:exception
+    make:factory
+    make:job
+    make:listener
+    make:mail
+    make:middleware
+    make:migration
+    make:model
+    make:notification
+    make:observer
+    make:policy
+    make:provider
+    make:request
+    make:resource
+    make:rule
+    make:scope
+    make:seeder
+    make:test
+    make:view at /var/www/vendor/symfony/console/Application.php:737)
+[stacktrace]
+#0 /var/www/vendor/symfony/console/Application.php(266): Symfony\\Component\\Console\\Application->find('make:class')
+#1 /var/www/vendor/symfony/console/Application.php(175): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#2 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#3 /var/www/artisan(12): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#4 {main}
+"} 
+[2025-10-02 17:49:09] laravel.EMERGENCY: Unable to create configured logger. Using emergency logger. {"exception":"[object] (InvalidArgumentException(code: 0): Log [] is not defined. at /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php:212)
+[stacktrace]
+#0 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(137): Illuminate\\Log\\LogManager->resolve(NULL, NULL)
+#1 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(124): Illuminate\\Log\\LogManager->get(NULL)
+#2 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(681): Illuminate\\Log\\LogManager->driver()
+#3 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(317): Illuminate\\Log\\LogManager->error('Command \"make:c...', Array)
+#4 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(278): Illuminate\\Foundation\\Exceptions\\Handler->reportThrowable(Object(Symfony\\Component\\Console\\Exception\\CommandNotFoundException))
+#5 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(523): Illuminate\\Foundation\\Exceptions\\Handler->report(Object(Symfony\\Component\\Console\\Exception\\CommandNotFoundException))
+#6 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(203): Illuminate\\Foundation\\Console\\Kernel->reportException(Object(Symfony\\Component\\Console\\Exception\\CommandNotFoundException))
+#7 /var/www/artisan(12): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#8 {main}
+"} 
+[2025-10-02 17:49:09] laravel.ERROR: Command "make:class" is not defined.
+
+Did you mean one of these?
+    make:cast
+    make:channel
+    make:command
+    make:component
+    make:controller
+    make:event
+    make:exception
+    make:factory
+    make:job
+    make:listener
+    make:mail
+    make:middleware
+    make:migration
+    make:model
+    make:notification
+    make:observer
+    make:policy
+    make:provider
+    make:request
+    make:resource
+    make:rule
+    make:scope
+    make:seeder
+    make:test
+    make:view {"exception":"[object] (Symfony\\Component\\Console\\Exception\\CommandNotFoundException(code: 0): Command \"make:class\" is not defined.
+
+Did you mean one of these?
+    make:cast
+    make:channel
+    make:command
+    make:component
+    make:controller
+    make:event
+    make:exception
+    make:factory
+    make:job
+    make:listener
+    make:mail
+    make:middleware
+    make:migration
+    make:model
+    make:notification
+    make:observer
+    make:policy
+    make:provider
+    make:request
+    make:resource
+    make:rule
+    make:scope
+    make:seeder
+    make:test
+    make:view at /var/www/vendor/symfony/console/Application.php:737)
+[stacktrace]
+#0 /var/www/vendor/symfony/console/Application.php(266): Symfony\\Component\\Console\\Application->find('make:class')
+#1 /var/www/vendor/symfony/console/Application.php(175): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#2 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#3 /var/www/artisan(12): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#4 {main}
+"} 
