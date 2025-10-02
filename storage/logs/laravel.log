@@ -219,3 +219,80 @@ Did you mean one of these?
 #3 /var/www/artisan(12): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #4 {main}
 "} 
+[2025-10-02 20:17:26] laravel.EMERGENCY: Unable to create configured logger. Using emergency logger. {"exception":"[object] (InvalidArgumentException(code: 0): Log [] is not defined. at /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php:212)
+[stacktrace]
+#0 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(137): Illuminate\\Log\\LogManager->resolve(NULL, NULL)
+#1 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(124): Illuminate\\Log\\LogManager->get(NULL)
+#2 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(681): Illuminate\\Log\\LogManager->driver()
+#3 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(317): Illuminate\\Log\\LogManager->error('Target class [A...', Array)
+#4 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(278): Illuminate\\Foundation\\Exceptions\\Handler->reportThrowable(Object(Illuminate\\Contracts\\Container\\BindingResolutionException))
+#5 /var/www/vendor/laravel/framework/src/Illuminate/Routing/Pipeline.php(49): Illuminate\\Foundation\\Exceptions\\Handler->report(Object(Illuminate\\Contracts\\Container\\BindingResolutionException))
+#6 /var/www/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(188): Illuminate\\Routing\\Pipeline->handleException(Object(Illuminate\\Http\\Request), Object(Illuminate\\Contracts\\Container\\BindingResolutionException))
+#7 /var/www/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#8 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#9 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#10 /var/www/public/index.php(36): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#11 {main}
+"} 
+[2025-10-02 20:17:26] laravel.ERROR: Target class [App\Http\Middleware\TrustProxies] does not exist. {"exception":"[object] (Illuminate\\Contracts\\Container\\BindingResolutionException(code: 0): Target class [App\\Http\\Middleware\\TrustProxies] does not exist. at /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php:914)
+[stacktrace]
+#0 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(795): Illuminate\\Container\\Container->build('App\\\\Http\\\\Middle...')
+#1 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(986): Illuminate\\Container\\Container->resolve('App\\\\Http\\\\Middle...', Array, true)
+#2 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(731): Illuminate\\Foundation\\Application->resolve('App\\\\Http\\\\Middle...', Array)
+#3 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(971): Illuminate\\Container\\Container->make('App\\\\Http\\\\Middle...', Array)
+#4 /var/www/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(172): Illuminate\\Foundation\\Application->make('App\\\\Http\\\\Middle...')
+#5 /var/www/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#6 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#7 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#8 /var/www/public/index.php(36): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#9 {main}
+
+[previous exception] [object] (ReflectionException(code: -1): Class \"App\\Http\\Middleware\\TrustProxies\" does not exist at /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php:912)
+[stacktrace]
+#0 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(912): ReflectionClass->__construct('App\\\\Http\\\\Middle...')
+#1 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(795): Illuminate\\Container\\Container->build('App\\\\Http\\\\Middle...')
+#2 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(986): Illuminate\\Container\\Container->resolve('App\\\\Http\\\\Middle...', Array, true)
+#3 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(731): Illuminate\\Foundation\\Application->resolve('App\\\\Http\\\\Middle...', Array)
+#4 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(971): Illuminate\\Container\\Container->make('App\\\\Http\\\\Middle...', Array)
+#5 /var/www/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(172): Illuminate\\Foundation\\Application->make('App\\\\Http\\\\Middle...')
+#6 /var/www/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#7 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#8 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#9 /var/www/public/index.php(36): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#10 {main}
+"} 
+[2025-10-02 20:17:35] laravel.EMERGENCY: Unable to create configured logger. Using emergency logger. {"exception":"[object] (InvalidArgumentException(code: 0): Log [] is not defined. at /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php:212)
+[stacktrace]
+#0 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(137): Illuminate\\Log\\LogManager->resolve(NULL, NULL)
+#1 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(124): Illuminate\\Log\\LogManager->get(NULL)
+#2 /var/www/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(681): Illuminate\\Log\\LogManager->driver()
+#3 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(317): Illuminate\\Log\\LogManager->error('Target class [A...', Array)
+#4 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(278): Illuminate\\Foundation\\Exceptions\\Handler->reportThrowable(Object(Illuminate\\Contracts\\Container\\BindingResolutionException))
+#5 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(183): Illuminate\\Foundation\\Exceptions\\Handler->report(Object(Illuminate\\Contracts\\Container\\BindingResolutionException))
+#6 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(255): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->handleException(Object(Illuminate\\Contracts\\Container\\BindingResolutionException))
+#7 [internal function]: Illuminate\\Foundation\\Bootstrap\\HandleExceptions->Illuminate\\Foundation\\Bootstrap\\{closure}(Object(Illuminate\\Contracts\\Container\\BindingResolutionException))
+#8 {main}
+"} 
+[2025-10-02 20:17:35] laravel.ERROR: Target class [App\Http\Middleware\TrustProxies] does not exist. {"exception":"[object] (Illuminate\\Contracts\\Container\\BindingResolutionException(code: 0): Target class [App\\Http\\Middleware\\TrustProxies] does not exist. at /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php:914)
+[stacktrace]
+#0 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(795): Illuminate\\Container\\Container->build('App\\\\Http\\\\Middle...')
+#1 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(986): Illuminate\\Container\\Container->resolve('App\\\\Http\\\\Middle...', Array, true)
+#2 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(731): Illuminate\\Foundation\\Application->resolve('App\\\\Http\\\\Middle...', Array)
+#3 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(971): Illuminate\\Container\\Container->make('App\\\\Http\\\\Middle...', Array)
+#4 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(255): Illuminate\\Foundation\\Application->make('App\\\\Http\\\\Middle...')
+#5 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(213): Illuminate\\Foundation\\Http\\Kernel->terminateMiddleware(Object(Illuminate\\Http\\Request), Object(Illuminate\\Http\\Response))
+#6 /var/www/public/index.php(40): Illuminate\\Foundation\\Http\\Kernel->terminate(Object(Illuminate\\Http\\Request), Object(Illuminate\\Http\\Response))
+#7 {main}
+
+[previous exception] [object] (ReflectionException(code: -1): Class \"App\\Http\\Middleware\\TrustProxies\" does not exist at /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php:912)
+[stacktrace]
+#0 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(912): ReflectionClass->__construct('App\\\\Http\\\\Middle...')
+#1 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(795): Illuminate\\Container\\Container->build('App\\\\Http\\\\Middle...')
+#2 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(986): Illuminate\\Container\\Container->resolve('App\\\\Http\\\\Middle...', Array, true)
+#3 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(731): Illuminate\\Foundation\\Application->resolve('App\\\\Http\\\\Middle...', Array)
+#4 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(971): Illuminate\\Container\\Container->make('App\\\\Http\\\\Middle...', Array)
+#5 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(255): Illuminate\\Foundation\\Application->make('App\\\\Http\\\\Middle...')
+#6 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(213): Illuminate\\Foundation\\Http\\Kernel->terminateMiddleware(Object(Illuminate\\Http\\Request), Object(Illuminate\\Http\\Response))
+#7 /var/www/public/index.php(40): Illuminate\\Foundation\\Http\\Kernel->terminate(Object(Illuminate\\Http\\Request), Object(Illuminate\\Http\\Response))
+#8 {main}
+"} 
