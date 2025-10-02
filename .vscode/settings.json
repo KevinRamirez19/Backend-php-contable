@@ -1,0 +1,11 @@
+{
+    "php.validate.executablePath": "",
+    "php.executablePath": "",
+    "docker.commands.run": "docker-compose exec app",
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/vendor": true,
+        "**/.git": true,
+        "**/.DS_Store": true
+    }
+}

@@ -28,4 +28,10 @@ RUN mkdir -p /home/concesionario/.composer && \
 # Set working directory
 WORKDIR /var/www
 
+# Copy existing application directory contents
+COPY . .
+
+# Copy existing application directory permissions
+COPY --chown=concesionario:concesionario . .
+
 USER concesionario

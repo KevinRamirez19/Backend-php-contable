@@ -5,39 +5,38 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreVentaRequest;
 use App\Http\Resources\VentaResource;
 use App\Services\VentaService;
+use App\Traits\ApiResponser;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class VentaController extends Controller
 {
+    use ApiResponser;
+
     public function __construct(private VentaService $ventaService) {}
+
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            $ventas = $this->ventaService->obtenerVentas($request->all());
+            
+            return $this->successResponse(VentaResource::collection($ventas), 'Ventas obtenidas exitosamente');
+            
+        } catch (\Exception $e) {
+            return $this->errorResponse('Error al obtener ventas: ' . $e->getMessage(), 500);
+        }
+    }
 
     public function store(StoreVentaRequest $request): JsonResponse
     {
         try {
             $venta = $this->ventaService->crearVenta($request->validated());
             
-            return response()->json([
-                'success' => true,
-                'data' => new VentaResource($venta),
-                'message' => 'Venta registrada exitosamente'
-            ], 201);
+            return $this->createdResponse(new VentaResource($venta), 'Venta registrada exitosamente');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al registrar la venta: ' . $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Error al registrar venta: ' . $e->getMessage(), 500);
         }
-    }
-
-    public function index(): JsonResponse
-    {
-        $ventas = $this->ventaService->obtenerVentas();
-        
-        return response()->json([
-            'success' => true,
-            'data' => VentaResource::collection($ventas)
-        ]);
     }
 
     public function show(int $id): JsonResponse
@@ -45,16 +44,22 @@ class VentaController extends Controller
         try {
             $venta = $this->ventaService->obtenerVenta($id);
             
-            return response()->json([
-                'success' => true,
-                'data' => new VentaResource($venta)
-            ]);
+            return $this->successResponse(new VentaResource($venta), 'Venta obtenida exitosamente');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 404);
+            return $this->notFoundResponse($e->getMessage());
+        }
+    }
+
+    public function reenviarDian(int $id): JsonResponse
+    {
+        try {
+            $venta = $this->ventaService->reenviarFacturaDian($id);
+            
+            return $this->successResponse(new VentaResource($venta), 'Factura reenviada a DIAN exitosamente');
+            
+        } catch (\Exception $e) {
+            return $this->errorResponse('Error al reenviar factura a DIAN: ' . $e->getMessage(), 500);
         }
     }
 }

@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\AuthService;
+use App\Traits\ApiResponser;
 use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
+    use ApiResponser;
+
     public function __construct(private AuthService $authService) {}
 
     public function register(RegisterRequest $request): JsonResponse
@@ -16,17 +19,10 @@ class AuthController extends Controller
         try {
             $user = $this->authService->register($request->validated());
             
-            return response()->json([
-                'success' => true,
-                'message' => 'Usuario registrado exitosamente',
-                'data' => $user
-            ], 201);
+            return $this->createdResponse($user, 'Usuario registrado exitosamente');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error en el registro: ' . $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Error en el registro: ' . $e->getMessage(), 500);
         }
     }
 
@@ -35,46 +31,46 @@ class AuthController extends Controller
         try {
             $token = $this->authService->login($request->validated());
             
-            return response()->json([
-                'success' => true,
-                'data' => $token
-            ]);
+            return $this->successResponse($token, 'Login exitoso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 401);
+            return $this->errorResponse($e->getMessage(), 401);
         }
     }
 
     public function logout(): JsonResponse
     {
-        $this->authService->logout();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Sesión cerrada exitosamente'
-        ]);
+        try {
+            $this->authService->logout();
+            
+            return $this->successResponse(null, 'Sesión cerrada exitosamente');
+            
+        } catch (\Exception $e) {
+            return $this->errorResponse('Error al cerrar sesión: ' . $e->getMessage(), 500);
+        }
     }
 
     public function refresh(): JsonResponse
     {
-        $token = $this->authService->refresh();
-        
-        return response()->json([
-            'success' => true,
-            'data' => $token
-        ]);
+        try {
+            $token = $this->authService->refresh();
+            
+            return $this->successResponse($token, 'Token refrescado exitosamente');
+            
+        } catch (\Exception $e) {
+            return $this->errorResponse('Error al refrescar token: ' . $e->getMessage(), 401);
+        }
     }
 
     public function me(): JsonResponse
     {
-        $user = $this->authService->getAuthenticatedUser();
-        
-        return response()->json([
-            'success' => true,
-            'data' => $user
-        ]);
+        try {
+            $user = $this->authService->getAuthenticatedUser();
+            
+            return $this->successResponse($user, 'Datos del usuario');
+            
+        } catch (\Exception $e) {
+            return $this->errorResponse('Error al obtener datos del usuario: ' . $e->getMessage(), 401);
+        }
     }
 }
