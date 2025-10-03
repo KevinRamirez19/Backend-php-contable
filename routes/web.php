@@ -6,17 +6,26 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
 // Ruta principal - Página de bienvenida
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Ruta de login para evitar el error "Route [login] not defined"
+Route::get('/login', function () {
+    return response()->json([
+        'message' => 'Sistema de API - Use endpoints de autenticación',
+        'endpoints' => [
+            'POST /api/auth/login' => 'Iniciar sesión',
+            'POST /api/auth/register' => 'Registrar usuario',
+            'POST /api/auth/logout' => 'Cerrar sesión',
+            'GET /api/auth/me' => 'Obtener perfil de usuario'
+        ],
+        'note' => 'Todas las rutas de API requieren autenticación JWT excepto /api/auth/login y /api/auth/register'
+    ]);
+})->name('login'); // ← ESTA LÍNEA ES IMPORTANTE
 
 // Ruta de health check para monitoreo
 Route::get('/health', function () {

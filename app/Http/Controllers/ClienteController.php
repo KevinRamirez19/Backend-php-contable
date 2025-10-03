@@ -2,77 +2,146 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreClienteRequest;
-use App\Http\Requests\UpdateClienteRequest;
-use App\Http\Resources\ClienteResource;
-use App\Services\ClienteService;
-use App\Traits\ApiResponser;
+use App\Models\Cliente;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ClienteController extends Controller
 {
-    use ApiResponser;
-
-    public function __construct(private ClienteService $clienteService) {}
-
-    public function index(Request $request): JsonResponse
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(): JsonResponse
     {
         try {
-            $clientes = $this->clienteService->obtenerClientes($request->all());
+            $clientes = Cliente::all();
             
-            return $this->successResponse(ClienteResource::collection($clientes), 'Clientes obtenidos exitosamente');
+            return response()->json([
+                'success' => true,
+                'data' => $clientes,
+                'message' => 'Clientes obtenidos exitosamente'
+            ]);
             
         } catch (\Exception $e) {
-            return $this->errorResponse('Error al obtener clientes: ' . $e->getMessage(), 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener clientes: ' . $e->getMessage()
+            ], 500);
         }
     }
 
-    public function store(StoreClienteRequest $request): JsonResponse
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request): JsonResponse
     {
         try {
-            $cliente = $this->clienteService->crearCliente($request->validated());
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:100',
+                'direccion' => 'nullable|string',
+                'tipo_documento' => 'required|in:CC,NIT,CE,PASAPORTE',
+                'numero_documento' => 'required|string|max:20|unique:clientes,numero_documento',
+                'telefono' => 'nullable|string|max:20',
+                'email' => 'nullable|email|max:100',
+            ]);
+
+            $cliente = Cliente::create($validated);
+
+            return response()->json([
+                'success' => true,
+                'data' => $cliente,
+                'message' => 'Cliente creado exitosamente'
+            ], 201);
             
-            return $this->createdResponse(new ClienteResource($cliente), 'Cliente creado exitosamente');
-            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return $this->errorResponse('Error al crear cliente: ' . $e->getMessage(), 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear cliente: ' . $e->getMessage()
+            ], 500);
         }
     }
 
-    public function show(int $id): JsonResponse
+    /**
+     * Display the specified resource.
+     */
+    public function show(Cliente $cliente): JsonResponse
     {
         try {
-            $cliente = $this->clienteService->obtenerCliente($id);
-            
-            return $this->successResponse(new ClienteResource($cliente), 'Cliente obtenido exitosamente');
+            return response()->json([
+                'success' => true,
+                'data' => $cliente,
+                'message' => 'Cliente obtenido exitosamente'
+            ]);
             
         } catch (\Exception $e) {
-            return $this->notFoundResponse($e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener cliente: ' . $e->getMessage()
+            ], 500);
         }
     }
 
-    public function update(UpdateClienteRequest $request, int $id): JsonResponse
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Cliente $cliente): JsonResponse
     {
         try {
-            $cliente = $this->clienteService->actualizarCliente($id, $request->validated());
+            $validated = $request->validate([
+                'nombre' => 'sometimes|string|max:100',
+                'direccion' => 'nullable|string',
+                'tipo_documento' => 'sometimes|in:CC,NIT,CE,PASAPORTE',
+                'numero_documento' => 'sometimes|string|max:20|unique:clientes,numero_documento,' . $cliente->id,
+                'telefono' => 'nullable|string|max:20',
+                'email' => 'nullable|email|max:100',
+            ]);
+
+            $cliente->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'data' => $cliente->fresh(),
+                'message' => 'Cliente actualizado exitosamente'
+            ]);
             
-            return $this->successResponse(new ClienteResource($cliente), 'Cliente actualizado exitosamente');
-            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return $this->errorResponse('Error al actualizar cliente: ' . $e->getMessage(), 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar cliente: ' . $e->getMessage()
+            ], 500);
         }
     }
 
-    public function destroy(int $id): JsonResponse
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Cliente $cliente): JsonResponse
     {
         try {
-            $this->clienteService->eliminarCliente($id);
-            
-            return $this->successResponse(null, 'Cliente eliminado exitosamente');
+            $cliente->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cliente eliminado exitosamente'
+            ]);
             
         } catch (\Exception $e) {
-            return $this->errorResponse('Error al eliminar cliente: ' . $e->getMessage(), 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar cliente: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
