@@ -180,4 +180,4 @@
         </div>
     </div>
 </body>
-</html>
+</html><?php /**PATH /var/www/resources/views/welcome.blade.php ENDPATH**/ ?>
