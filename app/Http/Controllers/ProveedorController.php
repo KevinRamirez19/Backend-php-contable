@@ -20,9 +20,7 @@ class ProveedorController extends Controller
     {
         try {
             $proveedores = $this->proveedorService->obtenerProveedores($request->all());
-            
             return $this->successResponse(ProveedorResource::collection($proveedores), 'Proveedores obtenidos exitosamente');
-            
         } catch (\Exception $e) {
             return $this->errorResponse('Error al obtener proveedores: ' . $e->getMessage(), 500);
         }
@@ -32,9 +30,7 @@ class ProveedorController extends Controller
     {
         try {
             $proveedor = $this->proveedorService->crearProveedor($request->validated());
-            
             return $this->createdResponse(new ProveedorResource($proveedor), 'Proveedor creado exitosamente');
-            
         } catch (\Exception $e) {
             return $this->errorResponse('Error al crear proveedor: ' . $e->getMessage(), 500);
         }
@@ -44,9 +40,7 @@ class ProveedorController extends Controller
     {
         try {
             $proveedor = $this->proveedorService->obtenerProveedor($id);
-            
             return $this->successResponse(new ProveedorResource($proveedor), 'Proveedor obtenido exitosamente');
-            
         } catch (\Exception $e) {
             return $this->notFoundResponse($e->getMessage());
         }
@@ -56,9 +50,7 @@ class ProveedorController extends Controller
     {
         try {
             $proveedor = $this->proveedorService->actualizarProveedor($id, $request->validated());
-            
             return $this->successResponse(new ProveedorResource($proveedor), 'Proveedor actualizado exitosamente');
-            
         } catch (\Exception $e) {
             return $this->errorResponse('Error al actualizar proveedor: ' . $e->getMessage(), 500);
         }
@@ -68,9 +60,7 @@ class ProveedorController extends Controller
     {
         try {
             $this->proveedorService->eliminarProveedor($id);
-            
             return $this->successResponse(null, 'Proveedor eliminado exitosamente');
-            
         } catch (\Exception $e) {
             return $this->errorResponse('Error al eliminar proveedor: ' . $e->getMessage(), 500);
         }

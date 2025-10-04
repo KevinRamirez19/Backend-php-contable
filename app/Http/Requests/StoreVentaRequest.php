@@ -9,7 +9,7 @@ class StoreVentaRequest extends FormRequest
     public function authorize(): bool
     {
         // Permitir temporalmente a todos los usuarios autenticados
-        return auth()->check(); // ← Cambiar esto
+        return auth()->check(); 
         // return auth()->check() && auth()->user()->hasRole('vendedor');
     }
 
@@ -22,7 +22,6 @@ class StoreVentaRequest extends FormRequest
             'detalles.*.cantidad' => 'required|integer|min:1',
         ];
     }
-}
 
     public function messages(): array
     {

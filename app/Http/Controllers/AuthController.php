@@ -134,23 +134,15 @@ class AuthController extends Controller
     /**
      * Log the user out (Invalidate the token).
      */
-    public function logout(): JsonResponse
-    {
-        try {
-            JWTAuth::logout();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Sesión cerrada exitosamente'
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al cerrar sesión: ' . $e->getMessage()
-            ], 500);
-        }
+public function logout(): JsonResponse
+{
+    try {
+        auth()->logout();
+        return $this->successResponse(null, 'Sesión cerrada exitosamente');
+    } catch (\Exception $e) {
+        return $this->successResponse(null, 'Sesión cerrada exitosamente');
     }
+}
 
     /**
      * Refresh a token.

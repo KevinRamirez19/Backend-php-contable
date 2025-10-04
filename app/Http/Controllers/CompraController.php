@@ -1,77 +1,60 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Services;
 
-use App\Http\Requests\StoreCompraRequest;
-use App\Http\Resources\CompraResource;
-use App\Services\CompraService;
-use App\Traits\ApiResponser;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use App\Models\Proveedor;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-class CompraController extends Controller
+class ProveedorService
 {
-    use ApiResponser;
-
-    public function __construct(private CompraService $compraService) {}
-
-    public function index(Request $request): JsonResponse
+    public function obtenerProveedores(array $filters = []): LengthAwarePaginator
     {
-        try {
-            $compras = $this->compraService->obtenerCompras($request->all());
-            
-            return $this->successResponse(CompraResource::collection($compras), 'Compras obtenidas exitosamente');
-            
-        } catch (\Exception $e) {
-            return $this->errorResponse('Error al obtener compras: ' . $e->getMessage(), 500);
+        $query = Proveedor::query();
+
+        if (!empty($filters['search'])) {
+            $query->search($filters['search']);
         }
+
+        $sortField = $filters['sort_field'] ?? 'created_at';
+        $sortDirection = $filters['sort_direction'] ?? 'desc';
+
+        return $query->orderBy($sortField, $sortDirection)
+                    ->paginate($filters['per_page'] ?? 15);
     }
 
-    public function store(StoreCompraRequest $request): JsonResponse
+    public function obtenerProveedor(int $id): Proveedor
     {
-        try {
-            $compra = $this->compraService->crearCompra($request->validated());
-            
-            return $this->createdResponse(new CompraResource($compra), 'Compra registrada exitosamente');
-            
-        } catch (\Exception $e) {
-            return $this->errorResponse('Error al registrar compra: ' . $e->getMessage(), 500);
+        $proveedor = Proveedor::find($id);
+
+        if (!$proveedor) {
+            throw new \Exception('Proveedor no encontrado');
         }
+
+        return $proveedor;
     }
 
-    public function show(int $id): JsonResponse
+    public function crearProveedor(array $data): Proveedor
     {
-        try {
-            $compra = $this->compraService->obtenerCompra($id);
-            
-            return $this->successResponse(new CompraResource($compra), 'Compra obtenida exitosamente');
-            
-        } catch (\Exception $e) {
-            return $this->notFoundResponse($e->getMessage());
-        }
+        return Proveedor::create($data);
     }
 
-    public function marcarComoPagada(int $id): JsonResponse
+    public function actualizarProveedor(int $id, array $data): Proveedor
     {
-        try {
-            $compra = $this->compraService->marcarComoPagada($id);
-            
-            return $this->successResponse(new CompraResource($compra), 'Compra marcada como pagada exitosamente');
-            
-        } catch (\Exception $e) {
-            return $this->errorResponse('Error al marcar compra como pagada: ' . $e->getMessage(), 500);
-        }
+        $proveedor = $this->obtenerProveedor($id);
+        $proveedor->update($data);
+
+        return $proveedor->fresh();
     }
 
-    public function marcarComoAnulada(int $id): JsonResponse
+    public function eliminarProveedor(int $id): bool
     {
-        try {
-            $compra = $this->compraService->marcarComoAnulada($id);
-            
-            return $this->successResponse(new CompraResource($compra), 'Compra marcada como anulada exitosamente');
-            
-        } catch (\Exception $e) {
-            return $this->errorResponse('Error al marcar compra como anulada: ' . $e->getMessage(), 500);
+        $proveedor = $this->obtenerProveedor($id);
+
+        // Verificar si tiene vehículos o compras asociadas
+        if ($proveedor->vehiculos()->exists() || $proveedor->compras()->exists()) {
+            throw new \Exception('No se puede eliminar el proveedor porque tiene vehículos o compras asociadas');
         }
+
+        return $proveedor->delete();
     }
 }

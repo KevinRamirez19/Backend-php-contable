@@ -41,7 +41,7 @@ Route::get('/health', function () {
 
 // Rutas protegidas con JWT
 Route::middleware(['auth:api'])->group(function () {
-    
+    Route::apiResource('ventas', VentaController::class);
     // Dashboard y estadísticas
     Route::get('/dashboard', function () {
         return response()->json([
