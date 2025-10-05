@@ -2,12 +2,19 @@
 
 namespace App\Services;
 
+use App\Services;
 use App\Models\Compra;
 use App\Models\CompraDetalle;
 use App\Models\Vehiculo;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
+class ContabilidadService{
+public function RegistrarMovientoCompra($compra)
+{
+
+}
+}
 class CompraService
 {
     public function __construct(private ContabilidadService $contabilidadService) {}

@@ -10,18 +10,10 @@ use App\Http\Controllers\AsientoContableController;
 use App\Http\Controllers\ReporteController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
-
-// Rutas públicas de autenticación
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
-    
-    // Rutas protegidas de autenticación
+
     Route::middleware('auth:api')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('refresh', [AuthController::class, 'refresh']);
@@ -29,7 +21,6 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-// Ruta de verificación de API
 Route::get('/health', function () {
     return response()->json([
         'status' => 'success',
@@ -39,10 +30,8 @@ Route::get('/health', function () {
     ]);
 });
 
-// Rutas protegidas con JWT
 Route::middleware(['auth:api'])->group(function () {
-    Route::apiResource('ventas', VentaController::class);
-    // Dashboard y estadísticas
+    // Dashboard
     Route::get('/dashboard', function () {
         return response()->json([
             'success' => true,
@@ -56,22 +45,16 @@ Route::middleware(['auth:api'])->group(function () {
         ]);
     });
 
-    // CRUD Clientes
+    // CRUD
     Route::apiResource('clientes', ClienteController::class);
-
-    // CRUD Vehículos
     Route::apiResource('vehiculos', VehiculoController::class);
     Route::get('vehiculos-disponibles', [VehiculoController::class, 'disponibles']);
-
-    // CRUD Proveedores
     Route::apiResource('proveedores', ProveedorController::class);
+    Route::apiResource('compra', CompraController::class);
+    Route::post('compra/{id}/pagar', [CompraController::class, 'marcarComoPagada']);
+    Route::post('compra/{id}/anular', [CompraController::class, 'marcarComoAnulada']);
 
-    // Compras
-    Route::apiResource('compras', CompraController::class);
-    Route::post('compras/{id}/pagar', [CompraController::class, 'marcarComoPagada']);
-    Route::post('compras/{id}/anular', [CompraController::class, 'marcarComoAnulada']);
-
-    // Ventas
+    // ✅ Ventas (solo una vez)
     Route::apiResource('ventas', VentaController::class);
     Route::post('ventas/{id}/reenviar-dian', [VentaController::class, 'reenviarDian']);
 
@@ -91,7 +74,6 @@ Route::middleware(['auth:api'])->group(function () {
     });
 });
 
-// Ruta de fallback para endpoints no encontrados
 Route::fallback(function () {
     return response()->json([
         'success' => false,
@@ -104,7 +86,7 @@ Route::fallback(function () {
             'GET /api/clientes (protected)',
             'GET /api/vehiculos (protected)',
             'GET /api/proveedores (protected)',
-            'GET /api/compras (protected)',
+            'GET /api/compra (protected)',
             'GET /api/ventas (protected)',
             'GET /api/asientos-contables (protected)',
             'GET /api/reportes/* (protected)'

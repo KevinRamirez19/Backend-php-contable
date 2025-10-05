@@ -117,9 +117,9 @@ class Vehiculo extends Model
         return $this->precio_venta - $this->precio_compra;
     }
 
-    public function tieneStock()
+    public function tieneStock(int $cantidad = 1): bool
     {
-        return $this->stock > 0 && $this->estado === self::ESTADO_DISPONIBLE;
+        return $this->stock >= $cantidad && $this->estado === self::ESTADO_DISPONIBLE;
     }
 
     public function reducirStock($cantidad = 1)

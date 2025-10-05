@@ -1,60 +1,53 @@
 <?php
 
-namespace App\Services;
+namespace App\Http\Controllers;
 
-use App\Models\Proveedor;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Http\Requests\StoreCompraRequest;
+use App\Http\Resources\CompraResource;
+use App\Models\Compra;
+use App\Services\CompraService;      // ✅ Solo usar el service
+use App\Traits\ApiResponser;
+use Illuminate\Http\JsonResponse;
 
-class ProveedorService
+class CompraController extends Controller
 {
-    public function obtenerProveedores(array $filters = []): LengthAwarePaginator
+    use ApiResponser;
+
+    public function __construct(private CompraService $compraService) {}
+
+    public function index(): JsonResponse
     {
-        $query = Proveedor::query();
-
-        if (!empty($filters['search'])) {
-            $query->search($filters['search']);
-        }
-
-        $sortField = $filters['sort_field'] ?? 'created_at';
-        $sortDirection = $filters['sort_direction'] ?? 'desc';
-
-        return $query->orderBy($sortField, $sortDirection)
-                    ->paginate($filters['per_page'] ?? 15);
+        $compras = $this->compraService->obtenerCompras();
+        return $this->successResponse(
+            CompraResource::collection($compras),
+            'Listado de compras obtenido exitosamente'
+        );
     }
 
-    public function obtenerProveedor(int $id): Proveedor
+    public function store(StoreCompraRequest $request): JsonResponse
     {
-        $proveedor = Proveedor::find($id);
-
-        if (!$proveedor) {
-            throw new \Exception('Proveedor no encontrado');
-        }
-
-        return $proveedor;
+        $compra = $this->compraService->crearCompra($request->validated());
+        return $this->createdResponse(
+            new CompraResource($compra),
+            'Compra registrada exitosamente'
+        );
     }
 
-    public function crearProveedor(array $data): Proveedor
+    public function marcarComoPagada(int $id): JsonResponse
     {
-        return Proveedor::create($data);
+        $compra = $this->compraService->marcarComoPagada($id);
+        return $this->successResponse(
+            new CompraResource($compra),
+            'Compra marcada como pagada'
+        );
     }
 
-    public function actualizarProveedor(int $id, array $data): Proveedor
+    public function marcarComoAnulada(int $id): JsonResponse
     {
-        $proveedor = $this->obtenerProveedor($id);
-        $proveedor->update($data);
-
-        return $proveedor->fresh();
-    }
-
-    public function eliminarProveedor(int $id): bool
-    {
-        $proveedor = $this->obtenerProveedor($id);
-
-        // Verificar si tiene vehículos o compras asociadas
-        if ($proveedor->vehiculos()->exists() || $proveedor->compras()->exists()) {
-            throw new \Exception('No se puede eliminar el proveedor porque tiene vehículos o compras asociadas');
-        }
-
-        return $proveedor->delete();
+        $compra = $this->compraService->marcarComoAnulada($id);
+        return $this->successResponse(
+            new CompraResource($compra),
+            'Compra anulada correctamente'
+        );
     }
 }
