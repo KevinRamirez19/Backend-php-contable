@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Proveedor;
 use App\Http\Requests\StoreProveedorRequest;
 use App\Http\Requests\UpdateProveedorRequest;
 use App\Http\Resources\ProveedorResource;
@@ -26,15 +27,16 @@ class ProveedorController extends Controller
         }
     }
 
-    public function store(StoreProveedorRequest $request): JsonResponse
-    {
-        try {
-            $proveedor = $this->proveedorService->crearProveedor($request->validated());
-            return $this->createdResponse(new ProveedorResource($proveedor), 'Proveedor creado exitosamente');
-        } catch (\Exception $e) {
-            return $this->errorResponse('Error al crear proveedor: ' . $e->getMessage(), 500);
-        }
-    }
+   public function store(StoreProveedorRequest $request)
+{
+    $proveedor = Proveedor::create($request->validated());
+
+    return response()->json([
+        'message' => 'Proveedor creado exitosamente',
+        'data' => $proveedor
+    ], 201);
+}
+
 
     public function show(int $id): JsonResponse
     {

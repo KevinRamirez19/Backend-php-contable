@@ -14,6 +14,7 @@ class Proveedor extends Model
 
     protected $fillable = [
         'nombre',
+        'nit',
         'direccion',
         'telefono',
         'email',
@@ -80,6 +81,7 @@ class Proveedor extends Model
     {
         return [
             'nombre' => 'required|string|max:100',
+            'nit' => 'required|string|max:50|unique:proveedores' . ($id ? ",nit,$id" : ''),
             'direccion' => 'nullable|string',
             'telefono' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:100',

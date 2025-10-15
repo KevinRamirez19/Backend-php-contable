@@ -10,7 +10,7 @@ class VentaDetalleResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'producto' => $this->producto->nombre ?? null,
+             'producto' => $this->vehiculo?->descripcion_completa ?? null,
             'cantidad' => $this->cantidad,
             'precio_unitario' => $this->precio_unitario,
             'subtotal' => $this->subtotal,
