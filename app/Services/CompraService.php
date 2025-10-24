@@ -2,114 +2,54 @@
 
 namespace App\Services;
 
-use App\Services;
 use App\Models\Compra;
-use App\Models\CompraDetalle;
 use App\Models\Vehiculo;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Exception;
 
-class ContabilidadService{
-public function RegistrarMovientoCompra($compra)
-{
-
-}
-}
 class CompraService
 {
-    public function __construct(private ContabilidadService $contabilidadService) {}
-
-    public function obtenerCompras(array $filters = []): LengthAwarePaginator
+    public function crearCompra(array $data)
     {
-        $query = Compra::with(['proveedor', 'detalles.vehiculo', 'usuario']);
+        try {
+            return DB::transaction(function () use ($data) {
 
-        if (!empty($filters['search'])) {
-            $query->search($filters['search']);
-        }
+                // 🔹 Calcular totales
+                $subtotal = collect($data['vehiculos'])->sum(fn($v) => $v['precio_unitario'] * $v['cantidad']);
+                $iva = $subtotal * 0.19;
+                $total = $subtotal + $iva;
 
-        $sortField = $filters['sort_field'] ?? 'created_at';
-        $sortDirection = $filters['sort_direction'] ?? 'desc';
-
-        return $query->orderBy($sortField, $sortDirection)
-                    ->paginate($filters['per_page'] ?? 15);
-    }
-
-    public function obtenerCompra(int $id): Compra
-    {
-        $compra = Compra::with(['proveedor', 'detalles.vehiculo', 'usuario'])->find($id);
-
-        if (!$compra) {
-            throw new \Exception('Compra no encontrada');
-        }
-
-        return $compra;
-    }
-
-    public function crearCompra(array $data): Compra
-    {
-        return DB::transaction(function () use ($data) {
-            // Calcular subtotal, IVA y total
-            $subtotal = 0;
-            
-            foreach ($data['detalles'] as $detalle) {
-                $subtotalDetalle = $detalle['cantidad'] * $detalle['precio_unitario'];
-                $subtotal += $subtotalDetalle;
-            }
-
-            $iva = $subtotal * 0.19;
-            $total = $subtotal + $iva;
-
-            // Crear compra
-            $compra = Compra::create([
-                'proveedor_id' => $data['proveedor_id'],
-                'numero_factura' => $data['numero_factura'],
-                'fecha_compra' => $data['fecha_compra'],
-                'subtotal' => $subtotal,
-                'iva' => $iva,
-                'total' => $total,
-                'estado' => Compra::ESTADO_PENDIENTE,
-                'created_by' => auth()->id(),
-            ]);
-
-            // Crear detalles de compra
-            foreach ($data['detalles'] as $detalle) {
-                CompraDetalle::create([
-                    'compra_id' => $compra->id,
-                    'vehiculo_id' => $detalle['vehiculo_id'],
-                    'cantidad' => $detalle['cantidad'],
-                    'precio_unitario' => $detalle['precio_unitario'],
-                    'subtotal' => $detalle['cantidad'] * $detalle['precio_unitario'],
+                // 🔹 Crear la compra principal
+                $compra = Compra::create([
+                    'proveedor_id'   => $data['proveedor_id'],
+                    'numero_factura' => $data['numero_factura'] ?? 'FAC-' . now()->timestamp,
+                    'fecha_compra'   => $data['fecha_compra'] ?? now(),
+                    'subtotal'       => $subtotal,
+                    'iva'            => $iva,
+                    'total'          => $total,
+                    'estado'         => $data['estado'] ?? 'Pendiente',
                 ]);
 
-                // Actualizar vehículo
-                $vehiculo = Vehiculo::find($detalle['vehiculo_id']);
-                $vehiculo->aumentarStock($detalle['cantidad']);
-            }
+                // 🔹 Asociar vehículos y actualizar stock
+                foreach ($data['vehiculos'] as $v) {
+                    $compra->vehiculos()->attach($v['vehiculo_id'], [
+                        'precio_unitario' => $v['precio_unitario'],
+                        'cantidad' => $v['cantidad'],
+                    ]);
 
-            return $compra->fresh(['proveedor', 'detalles.vehiculo', 'usuario']);
-        });
-    }
+                    $vehiculo = Vehiculo::find($v['vehiculo_id']);
+                    if ($vehiculo) {
+                        $vehiculo->increment('stock', $v['cantidad']);
+                        if ($vehiculo->estado === Vehiculo::ESTADO_VENDIDO) {
+                            $vehiculo->update(['estado' => Vehiculo::ESTADO_DISPONIBLE]);
+                        }
+                    }
+                }
 
-    public function marcarComoPagada(int $id): Compra
-    {
-        $compra = $this->obtenerCompra($id);
-        $compra->marcarComoPagada();
-
-        return $compra->fresh();
-    }
-
-    public function marcarComoAnulada(int $id): Compra
-    {
-        return DB::transaction(function () use ($id) {
-            $compra = $this->obtenerCompra($id);
-            
-            // Revertir stock de vehículos
-            foreach ($compra->detalles as $detalle) {
-                $detalle->vehiculo->reducirStock($detalle->cantidad);
-            }
-
-            $compra->marcarComoAnulada();
-            return $compra->fresh();
-        });
+                return $compra->load(['proveedor', 'vehiculos']);
+            });
+        } catch (Exception $e) {
+            throw new Exception("No se pudo crear la compra: " . $e->getMessage());
+        }
     }
 }

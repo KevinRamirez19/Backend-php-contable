@@ -53,6 +53,14 @@ class Vehiculo extends Model
     {
         return $this->hasMany(CompraDetalle::class);
     }
+    
+    public function compras()
+{
+    return $this->belongsToMany(Compra::class, 'compra_vehiculo')
+                ->withPivot('precio_unitario', 'cantidad')
+                ->withTimestamps();
+}
+
 
     public function ventaDetalles()
     {

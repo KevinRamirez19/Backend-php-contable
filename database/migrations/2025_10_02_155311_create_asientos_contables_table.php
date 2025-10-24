@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('codigo', 20)->unique();
             $table->text('descripcion');
             $table->date('fecha');
+             $table->decimal('total', 15, 2)->default(0);
             $table->foreignId('compra_id')->nullable()->constrained('compras');
             $table->foreignId('venta_id')->nullable()->constrained('ventas');
             $table->foreignId('created_by')->constrained('usuarios');

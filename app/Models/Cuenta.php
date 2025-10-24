@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cuenta extends Model
 {
-    use HasFactory;
 
     protected $table = 'cuentas';
 
@@ -31,7 +30,7 @@ class Cuenta extends Model
      */
     public function partidas()
     {
-        return $this->hasMany(PartidaContable::class);
+        return $this->hasMany(PartidaContable::class, 'cuenta_id');
     }
 
     /**
@@ -50,7 +49,7 @@ class Cuenta extends Model
     public function scopeSearch($query, $search)
     {
         return $query->where('codigo', 'like', "%{$search}%")
-                    ->orWhere('nombre', 'like', "%{$search}%");
+            ->orWhere('nombre', 'like', "%{$search}%");
     }
 
     /**
@@ -60,24 +59,24 @@ class Cuenta extends Model
     {
         $debe = $this->partidas()->sum('debe');
         $haber = $this->partidas()->sum('haber');
-        
+
         return $debe - $haber;
     }
 
     public function getSaldoPeriodo($fechaInicio, $fechaFin)
     {
         $debe = $this->partidas()
-                    ->whereHas('asiento', function($q) use ($fechaInicio, $fechaFin) {
-                        $q->whereBetween('fecha', [$fechaInicio, $fechaFin]);
-                    })
-                    ->sum('debe');
-                    
+            ->whereHas('asiento', function ($q) use ($fechaInicio, $fechaFin) {
+                $q->whereBetween('fecha', [$fechaInicio, $fechaFin]);
+            })
+            ->sum('debe');
+
         $haber = $this->partidas()
-                     ->whereHas('asiento', function($q) use ($fechaInicio, $fechaFin) {
-                         $q->whereBetween('fecha', [$fechaInicio, $fechaFin]);
-                     })
-                     ->sum('haber');
-        
+            ->whereHas('asiento', function ($q) use ($fechaInicio, $fechaFin) {
+                $q->whereBetween('fecha', [$fechaInicio, $fechaFin]);
+            })
+            ->sum('haber');
+
         return $debe - $haber;
     }
 
@@ -115,7 +114,7 @@ class Cuenta extends Model
             self::TIPO_INGRESO => 'Ingreso',
             self::TIPO_GASTO => 'Gasto',
         ];
-        
+
         return $tipos[$this->tipo] ?? $this->tipo;
     }
 

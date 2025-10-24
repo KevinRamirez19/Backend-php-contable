@@ -20,7 +20,6 @@ class Compra extends Model
         'iva',
         'total',
         'estado',
-        'created_by',
     ];
 
     protected $casts = [
@@ -43,13 +42,19 @@ class Compra extends Model
      */
     public function proveedor()
     {
-        return $this->belongsTo(Proveedor::class);
+        return $this->belongsTo(Proveedor::class, 'proveedor_id');
     }
 
     public function detalles()
     {
         return $this->hasMany(CompraDetalle::class);
     }
+    public function vehiculos()
+{
+    return $this->belongsToMany(Vehiculo::class, 'compra_vehiculo')
+                ->withPivot('precio_unitario', 'cantidad')
+                ->withTimestamps();
+}
 
     public function asientoContable()
     {

@@ -7,7 +7,9 @@ use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\CompraController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\AsientoContableController;
+use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\ReporteController;
+use App\Models\Cuenta;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -50,14 +52,16 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('vehiculos', VehiculoController::class);
     Route::get('vehiculos-disponibles', [VehiculoController::class, 'disponibles']);
     Route::apiResource('proveedores', ProveedorController::class);
-    Route::apiResource('compra', CompraController::class);
-    Route::post('compra/{id}/pagar', [CompraController::class, 'marcarComoPagada']);
-    Route::post('compra/{id}/anular', [CompraController::class, 'marcarComoAnulada']);
+    Route::apiResource('compras', CompraController::class);
+    Route::post('compras/{id}/pagar', [CompraController::class, 'marcarComoPagada']);
+    Route::post('compras/{id}/anular', [CompraController::class, 'marcarComoAnulada']);
+    
 
     // ✅ Ventas (solo una vez)
     Route::apiResource('ventas', VentaController::class);
     Route::post('ventas/{id}/reenviar-dian', [VentaController::class, 'reenviarDian']);
 
+    Route::apiResource('cuentas', CuentaController::class);
     // Contabilidad
     Route::apiResource('asientos-contables', AsientoContableController::class)->only(['index', 'show']);
     Route::get('asientos-contables/libro-diario', [AsientoContableController::class, 'libroDiario']);

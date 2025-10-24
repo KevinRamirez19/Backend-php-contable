@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('codigo', 20)->unique();
             $table->string('nombre', 100);
             $table->enum('tipo', ['ACTIVO', 'PASIVO', 'PATRIMONIO', 'INGRESO', 'GASTO']);
+            $table->decimal('saldo', 15, 2)->default(0);
             $table->timestamps();
         });
     }

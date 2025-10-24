@@ -12,9 +12,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('asiento_id')->constrained('asientos_contables')->onDelete('cascade');
             $table->foreignId('cuenta_id')->constrained('cuentas');
-            $table->decimal('debe', 12, 2);
-            $table->decimal('haber', 12, 2);
-            $table->text('descripcion')->nullable();
+            $table->enum('tipo', ['debe','haber']);
+    $table->decimal('monto', 15, 2);
+    $table->string('descripcion')->nullable();
+    $table->timestamps();
         });
     }
 
