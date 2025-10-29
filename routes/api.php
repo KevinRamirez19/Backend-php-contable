@@ -6,12 +6,12 @@ use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\CompraController;
 use App\Http\Controllers\VentaController;
-use App\Http\Controllers\AsientoContableController;
 use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\ReporteController;
-use App\Models\Cuenta;
+use App\Http\Controllers\AsientoContableController;
 use Illuminate\Support\Facades\Route;
 
+// 🔹 Rutas de autenticación
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
@@ -23,6 +23,7 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+// 🔹 Ruta de salud de la API
 Route::get('/health', function () {
     return response()->json([
         'status' => 'success',
@@ -32,7 +33,9 @@ Route::get('/health', function () {
     ]);
 });
 
+// 🔒 Rutas protegidas por token
 Route::middleware(['auth:api'])->group(function () {
+
     // Dashboard
     Route::get('/dashboard', function () {
         return response()->json([
@@ -47,7 +50,7 @@ Route::middleware(['auth:api'])->group(function () {
         ]);
     });
 
-    // CRUD
+    // Recursos principales
     Route::apiResource('clientes', ClienteController::class);
     Route::apiResource('vehiculos', VehiculoController::class);
     Route::get('vehiculos-disponibles', [VehiculoController::class, 'disponibles']);
@@ -55,45 +58,36 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('compras', CompraController::class);
     Route::post('compras/{id}/pagar', [CompraController::class, 'marcarComoPagada']);
     Route::post('compras/{id}/anular', [CompraController::class, 'marcarComoAnulada']);
-    
-
-    // ✅ Ventas (solo una vez)
     Route::apiResource('ventas', VentaController::class);
     Route::post('ventas/{id}/reenviar-dian', [VentaController::class, 'reenviarDian']);
 
+    // Cuentas contables
     Route::apiResource('cuentas', CuentaController::class);
-    // Contabilidad
-    Route::apiResource('asientos-contables', AsientoContableController::class)->only(['index', 'show']);
-    Route::get('asientos-contables/libro-diario', [AsientoContableController::class, 'libroDiario']);
-    Route::get('asientos-contables/mayor-cuentas', [AsientoContableController::class, 'mayorCuentas']);
 
-    // Reportes
+    // Asientos contables
+    Route::get('/asientos', [AsientoContableController::class, 'index']);
+    Route::get('/asientos/{id}', [AsientoContableController::class, 'show']);
+    Route::post('/asientos', [AsientoContableController::class, 'store']);
+    Route::put('/asientos/{id}', [AsientoContableController::class, 'update']);
+    Route::delete('/asientos/{id}', [AsientoContableController::class, 'destroy']);
+
+    // 🔹 NUEVAS RUTAS: Partidas contables
+    Route::get('partidas', [\App\Http\Controllers\PartidaContableController::class, 'index']);
+    Route::get('partidas/{id}', [\App\Http\Controllers\PartidaContableController::class, 'show']);
+    Route::post('partidas', [\App\Http\Controllers\PartidaContableController::class, 'store']);
+    Route::put('partidas/{id}', [\App\Http\Controllers\PartidaContableController::class, 'update']);
+    Route::delete('partidas/{id}', [\App\Http\Controllers\PartidaContableController::class, 'destroy']);
+
     Route::prefix('reportes')->group(function () {
-        Route::get('libro-diario', [ReporteController::class, 'libroDiario']);
-        Route::get('mayor-cuentas', [ReporteController::class, 'mayorCuentas']);
-        Route::get('balance-general', [ReporteController::class, 'balanceGeneral']);
-        Route::get('estado-resultados', [ReporteController::class, 'estadoResultados']);
-        Route::get('ventas-periodo', [ReporteController::class, 'ventasPorPeriodo']);
-        Route::get('inventario', [ReporteController::class, 'inventario']);
+        Route::post('libro-diario', [ReporteController::class, 'libroDiario']);
+        Route::post('mayor-cuentas', [ReporteController::class, 'mayorCuentas']);
+        Route::post('balance-general', [ReporteController::class, 'balanceGeneral']);
+        Route::post('estado-resultados', [ReporteController::class, 'estadoResultados']);
+        Route::post('ventas-periodo', [ReporteController::class, 'ventasPorPeriodo']);
+        Route::post('inventario', [ReporteController::class, 'inventario']);
+        Route::get('reportes/libro-diario/pdf', [ReporteController::class, 'descargarLibroDiarioPDF']);
+        Route::get('reportes/libro-diario/excel', [ReporteController::class, 'descargarLibroDiarioExcel']);
+
     });
 });
 
-Route::fallback(function () {
-    return response()->json([
-        'success' => false,
-        'message' => 'Endpoint no encontrado',
-        'available_endpoints' => [
-            'GET /api/health',
-            'POST /api/auth/register',
-            'POST /api/auth/login',
-            'GET /api/dashboard (protected)',
-            'GET /api/clientes (protected)',
-            'GET /api/vehiculos (protected)',
-            'GET /api/proveedores (protected)',
-            'GET /api/compra (protected)',
-            'GET /api/ventas (protected)',
-            'GET /api/asientos-contables (protected)',
-            'GET /api/reportes/* (protected)'
-        ]
-    ], 404);
-});

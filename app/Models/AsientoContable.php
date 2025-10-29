@@ -29,7 +29,7 @@ class AsientoContable extends Model
      */
     public function partidas()
     {
-        return $this->hasMany(PartidaContable::class);
+        return $this->hasMany(PartidaContable::class, 'asiento_id');
     }
 
     public function compra()
@@ -46,6 +46,11 @@ class AsientoContable extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+    public function cuenta()
+{
+    return $this->belongsTo(Cuenta::class, 'cuenta_id');
+}
+
 
     /**
      * Scopes

@@ -36,7 +36,7 @@ class PartidaContable extends Model
 
     public function cuenta()
     {
-        return $this->belongsTo(Cuenta::class);
+        return $this->belongsTo(Cuenta::class, 'cuenta_id');
     }
 
     /**

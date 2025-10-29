@@ -1,6 +1,6 @@
 FROM php:8.2-fpm
 
-# Install system dependencies
+# Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -9,29 +9,25 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    libzip-dev
+    libzip-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions
+# Instalar extensiones PHP necesarias
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Instalar Composer
+COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
-# Create system user to run Composer and Artisan Commands
-RUN useradd -G www-data,root -u 1000 -d /home/concesionario concesionario
-RUN mkdir -p /home/concesionario/.composer && \
-    chown -R concesionario:concesionario /home/concesionario
+# Crear usuario para la app
+RUN useradd -G www-data,root -u 1000 -d /home/concesionario concesionario \
+    && mkdir -p /home/concesionario/.composer \
+    && chown -R concesionario:concesionario /home/concesionario
 
-# Set working directory
+# Directorio de trabajo
 WORKDIR /var/www
 
-# Copy existing application directory contents
-COPY . .
-
-# Copy existing application directory permissions
+# Copiar código
 COPY --chown=concesionario:concesionario . .
 
+# Cambiar a usuario no root
 USER concesionario
