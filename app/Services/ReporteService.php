@@ -4,43 +4,40 @@ namespace App\Services;
 
 use App\Models\AsientoContable;
 use App\Models\Cuenta;
-use App\Models\Venta;
-use App\Models\Compra;
-use App\Models\Vehiculo;
-use Illuminate\Support\Facades\DB;
 
 class ReporteService
 {
-    // App/Services/ReporteService.php
+    /** 🔹 Libro Diario */
+    public function generarLibroDiario(array $filters = []): array
+    {
+        $fechaInicio = $filters['fecha_inicio'] ?? now()->startOfMonth()->format('Y-m-d');
+        $fechaFin = $filters['fecha_fin'] ?? now()->format('Y-m-d');
 
-public function generarLibroDiario(array $filters = []): array
-{
-    $fechaInicio = $filters['fecha_inicio'] ?? now()->startOfMonth()->format('Y-m-d');
-    $fechaFin = $filters['fecha_fin'] ?? now()->format('Y-m-d');
+        $asientos = AsientoContable::with(['partidas.cuenta'])
+            ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+            ->orderBy('fecha')
+            ->orderBy('id')
+            ->get();
 
-    $asientos = AsientoContable::with(['partidas.cuenta'])
-        ->whereBetween('fecha', [$fechaInicio, $fechaFin])
-        ->orderBy('fecha')
-        ->orderBy('id')
-        ->get();
+        return $asientos->map(function ($asiento) {
+            return [
+                'fecha' => $asiento->fecha,
+                'descripcion' => $asiento->descripcion,
+                'partidas' => $asiento->partidas->map(function ($p) {
+                    return [
+                        'cuenta_codigo' => $p->cuenta->codigo,
+                        'cuenta_nombre' => $p->cuenta->nombre,
+                        'debe' => $p->debe,
+                        'haber' => $p->haber,
+                        'descripcion' => $p->descripcion,
+                        'contrapartida' => $p->haber > 0 ? 'Venta' : 'Compra',
+                    ];
+                }),
+            ];
+        })->toArray();
+    }
 
-    return $asientos->map(function ($asiento) {
-        return [
-            'fecha' => $asiento->fecha,
-            'descripcion' => $asiento->descripcion,
-            'partidas' => $asiento->partidas->map(function ($p) {
-                return [
-                    'cuenta_codigo' => $p->cuenta->codigo,
-                    'cuenta_nombre' => $p->cuenta->nombre,
-                    'debe' => $p->debe,
-                    'haber' => $p->haber,
-                    'descripcion' => $p->descripcion,
-                ];
-            }),
-        ];
-    })->toArray();
-}
-
+    /** 🔹 Mayor de Cuentas */
     public function generarMayorCuentas(array $filters = []): array
     {
         $fechaInicio = $filters['fecha_inicio'] ?? now()->startOfMonth()->format('Y-m-d');
@@ -72,7 +69,7 @@ public function generarLibroDiario(array $filters = []): array
         ];
     }
 
-    /** 🔹 CORREGIDO: incluye todos los asientos manuales por tipo de cuenta */
+    /** 🔹 Balance General (con contrapartida de ventas / utilidad del ejercicio) */
     public function generarBalanceGeneral(array $filters = []): array
     {
         $fechaCorte = $filters['fecha_corte'] ?? now()->format('Y-m-d');
@@ -89,7 +86,6 @@ public function generarLibroDiario(array $filters = []): array
                 ->map(function ($cuenta) {
                     $debe = $cuenta->partidas->sum('debe');
                     $haber = $cuenta->partidas->sum('haber');
-                    // Activos se calculan diferente de Pasivos/Patrimonio
                     $saldo = $cuenta->tipo === 'ACTIVO' ? $debe - $haber : $haber - $debe;
                     return [
                         'cuenta' => $cuenta,
@@ -103,6 +99,27 @@ public function generarLibroDiario(array $filters = []): array
             ];
         }
 
+        // 🔸 Calcular utilidad o pérdida del ejercicio (contrapartida de ventas)
+        $ingresos = Cuenta::where('tipo', 'INGRESO')->with('partidas')->get();
+        $gastos = Cuenta::whereIn('tipo', ['GASTO', 'EGRESO'])->with('partidas')->get();
+
+        $totalIngresos = $ingresos->sum(fn($c) => $c->partidas->sum('haber') - $c->partidas->sum('debe'));
+        $totalGastos = $gastos->sum(fn($c) => $c->partidas->sum('debe') - $c->partidas->sum('haber'));
+
+        $utilidad = $totalIngresos - $totalGastos;
+
+        // 🔹 Añadir contrapartida (ventas) dentro del patrimonio
+        $contrapartida = [
+            'cuenta' => (object)[
+                'codigo' => '3900',
+                'nombre' => $utilidad >= 0 ? 'Utilidad del ejercicio (contrapartida de ventas)' : 'Pérdida del ejercicio',
+            ],
+            'saldo' => $utilidad,
+        ];
+
+        $resultados['PATRIMONIO']['cuentas']->push($contrapartida);
+        $resultados['PATRIMONIO']['total'] += $utilidad;
+
         return [
             'activos' => $resultados['ACTIVO'],
             'pasivos' => $resultados['PASIVO'],
@@ -114,57 +131,57 @@ public function generarLibroDiario(array $filters = []): array
                     $resultados['ACTIVO']['total'] - ($resultados['PASIVO']['total'] + $resultados['PATRIMONIO']['total'])
                 ),
             ],
+            'utilidad_ejercicio' => $utilidad,
+            'contrapartida' => $contrapartida,
             'fecha_corte' => $fechaCorte,
         ];
     }
 
-    /** 🔹 ACTUALIZADO: acepta cuentas tipo GASTO o EGRESO */
-public function generarEstadoResultados(array $filters = []): array
-{
-    $fechaInicio = $filters['fecha_inicio'] ?? now()->startOfMonth()->format('Y-m-d');
-    $fechaFin = $filters['fecha_fin'] ?? now()->format('Y-m-d');
+    /** 🔹 Estado de Resultados */
+    public function generarEstadoResultados(array $filters = []): array
+    {
+        $fechaInicio = $filters['fecha_inicio'] ?? now()->startOfMonth()->format('Y-m-d');
+        $fechaFin = $filters['fecha_fin'] ?? now()->format('Y-m-d');
 
-    // 🔸 Ingresos
-    $ingresos = Cuenta::where('tipo', 'INGRESO')
-        ->with(['partidas.asiento' => function ($q) use ($fechaInicio, $fechaFin) {
-            $q->whereBetween('fecha', [$fechaInicio, $fechaFin]);
-        }])
-        ->get()
-        ->map(function ($cuenta) {
-            $debe = $cuenta->partidas->sum('debe');
-            $haber = $cuenta->partidas->sum('haber');
-            $saldo = $haber - $debe; // ingresos = haber - debe
-            return ['cuenta' => $cuenta, 'saldo' => $saldo];
-        });
+        $ingresos = Cuenta::where('tipo', 'INGRESO')
+            ->with(['partidas.asiento' => function ($q) use ($fechaInicio, $fechaFin) {
+                $q->whereBetween('fecha', [$fechaInicio, $fechaFin]);
+            }])
+            ->get()
+            ->map(function ($cuenta) {
+                $debe = $cuenta->partidas->sum('debe');
+                $haber = $cuenta->partidas->sum('haber');
+                $saldo = $haber - $debe;
+                return ['cuenta' => $cuenta, 'saldo' => $saldo];
+            });
 
-    // 🔸 Gastos / Egresos
-    $gastos = Cuenta::whereIn('tipo', ['GASTO', 'EGRESO'])
-        ->with(['partidas.asiento' => function ($q) use ($fechaInicio, $fechaFin) {
-            $q->whereBetween('fecha', [$fechaInicio, $fechaFin]);
-        }])
-        ->get()
-        ->map(function ($cuenta) {
-            $debe = $cuenta->partidas->sum('debe');
-            $haber = $cuenta->partidas->sum('haber');
-            $saldo = $debe - $haber; // gastos = debe - haber
-            return ['cuenta' => $cuenta, 'saldo' => $saldo];
-        });
+        $gastos = Cuenta::whereIn('tipo', ['GASTO', 'EGRESO'])
+            ->with(['partidas.asiento' => function ($q) use ($fechaInicio, $fechaFin) {
+                $q->whereBetween('fecha', [$fechaInicio, $fechaFin]);
+            }])
+            ->get()
+            ->map(function ($cuenta) {
+                $debe = $cuenta->partidas->sum('debe');
+                $haber = $cuenta->partidas->sum('haber');
+                $saldo = $debe - $haber;
+                return ['cuenta' => $cuenta, 'saldo' => $saldo];
+            });
 
-    $totalIngresos = $ingresos->sum('saldo');
-    $totalGastos = $gastos->sum('saldo');
-    $utilidadNeta = $totalIngresos - $totalGastos;
+        $totalIngresos = $ingresos->sum('saldo');
+        $totalGastos = $gastos->sum('saldo');
+        $utilidadNeta = $totalIngresos - $totalGastos;
 
-    return [
-        'ingresos' => ['cuentas' => $ingresos, 'total' => $totalIngresos],
-        'gastos' => ['cuentas' => $gastos, 'total' => $totalGastos],
-        'resultado' => [
-            'utilidad_neta' => $utilidadNeta,
-            'periodo' => $utilidadNeta >= 0 ? 'UTILIDAD' : 'PÉRDIDA',
-        ],
-        'periodo' => [
-            'fecha_inicio' => $fechaInicio,
-            'fecha_fin' => $fechaFin,
-        ],
-    ];
-}
+        return [
+            'ingresos' => ['cuentas' => $ingresos, 'total' => $totalIngresos],
+            'gastos' => ['cuentas' => $gastos, 'total' => $totalGastos],
+            'resultado' => [
+                'utilidad_neta' => $utilidadNeta,
+                'periodo' => $utilidadNeta >= 0 ? 'UTILIDAD' : 'PÉRDIDA',
+            ],
+            'periodo' => [
+                'fecha_inicio' => $fechaInicio,
+                'fecha_fin' => $fechaFin,
+            ],
+        ];
+    }
 }
