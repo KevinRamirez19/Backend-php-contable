@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+
+  <cbc:ProfileID>DIAN 2.1</cbc:ProfileID>
+  <cbc:ID>FE16</cbc:ID>
+  <cbc:UUID schemeID="2" schemeName="CUFE-SHA384">16-SIMULADO</cbc:UUID>
+  <cbc:IssueDate>2025-11-01</cbc:IssueDate>
+  <cbc:IssueTime>00:00:00-05:00</cbc:IssueTime>
+  <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyName>
+        <cbc:Name>TECNOLOGÍAS AVANZADAS S.A.S.</cbc:Name>
+      </cac:PartyName>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyName>
+        <cbc:Name>Yeferson Andrey Rivas Alonso</cbc:Name>
+      </cac:PartyName>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">1</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">35000000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>Toyota Hylux 2023 - Verde</cbc:Description>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">35000000.00</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="COP">6650000.00</cbc:TaxAmount>
+  </cac:TaxTotal>
+
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="COP">35000000.00</cbc:LineExtensionAmount>
+    <cbc:TaxInclusiveAmount currencyID="COP">41650000.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="COP">41650000.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+
+</Invoice>

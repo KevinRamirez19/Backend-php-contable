@@ -3,134 +3,109 @@
 namespace App\Services;
 
 use App\Models\Venta;
-use App\Exceptions\DianException;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class DianService
 {
-    private string $baseUrl;
-    private array $credentials;
-
-    public function __construct()
+    public function enviarFactura(Venta $venta): void
     {
-        $mode = config('dian.mode', 'homologacion');
-        $config = config("dian.{$mode}");
-        
-        $this->baseUrl = $config['url'];
-        $this->credentials = [
-            'username' => $config['username'],
-            'password' => $config['password'],
-        ];
+        // 1️⃣ Generar el XML con formato DIAN
+        $xml = $this->generarXmlFactura($venta);
+
+        // 2️⃣ Guardar localmente (para auditoría o envío)
+        $fileName = 'facturas/FE-' . $venta->id . '.xml';
+        Storage::disk('local')->put($fileName, $xml);
+
+        // 3️⃣ (Opcional) Enviar a la DIAN o simular la validación
+        // Aquí podrías integrar el envío real si usas el ambiente de pruebas DIAN
+        $venta->update([
+            'estado_dian' => 'ENVIADA',
+            'cufe' => strtoupper(Str::random(32)), // Simula el CUFE real
+            'qr_code' => 'https://www.dian.gov.co/VerificarFactura/' . $venta->id,
+        ]);
     }
 
-    public function enviarFactura(Venta $venta): array
+    private function generarXmlFactura(Venta $venta): string
     {
-        try {
-            // Preparar payload para DIAN
-            $payload = $this->prepararPayloadFactura($venta);
+        $fecha = $venta->fecha_venta->format('Y-m-d');
+        $hora = $venta->fecha_venta->format('H:i:s');
 
-            // Enviar a DIAN
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Basic ' . base64_encode($this->credentials['username'] . ':' . $this->credentials['password']),
-                ])
-                ->post($this->baseUrl . '/facturas', $payload);
+        $xml = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
 
-            if ($response->successful()) {
-                $data = $response->json();
-                
-                // Actualizar venta con respuesta DIAN
-                $venta->update([
-                    'estado_dian' => Venta::ESTADO_DIAN_ACEPTADA,
-                    'cufe' => $data['cufe'] ?? null,
-                    'qr_code' => $data['qr_code'] ?? null,
-                ]);
+  <cbc:ProfileID>DIAN 2.1</cbc:ProfileID>
+  <cbc:ID>FE{$venta->id}</cbc:ID>
+  <cbc:UUID schemeID="2" schemeName="CUFE-SHA384">{$venta->id}-SIMULADO</cbc:UUID>
+  <cbc:IssueDate>{$fecha}</cbc:IssueDate>
+  <cbc:IssueTime>{$hora}-05:00</cbc:IssueTime>
+  <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
 
-                return $data;
-            } else {
-                $error = $response->json();
-                throw new DianException(
-                    $error['message'] ?? 'Error en la comunicación con DIAN',
-                    $venta->id,
-                    $error['code'] ?? 'UNKNOWN_ERROR',
-                    $response->status()
-                );
-            }
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyName>
+        <cbc:Name>TECNOLOGÍAS AVANZADAS S.A.S.</cbc:Name>
+      </cac:PartyName>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
 
-        } catch (\Exception $e) {
-            Log::error('Error enviando factura a DIAN', [
-                'venta_id' => $venta->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyName>
+        <cbc:Name>{$venta->cliente->nombre}</cbc:Name>
+      </cac:PartyName>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
 
-            $venta->update([
-                'estado_dian' => Venta::ESTADO_DIAN_RECHAZADA,
-            ]);
+XML;
 
-            throw new DianException(
-                $e->getMessage(),
-                $venta->id,
-                'DIAN_ERROR',
-                $e->getCode() ?: 500
-            );
-        }
-    }
+        // 🔁 Agregar líneas de detalle
+        foreach ($venta->detalles as $i => $detalle) {
+            $id = $i + 1;
+            $cantidad = $detalle->cantidad;
+            $precio = number_format($detalle->precio_unitario, 2, '.', '');
+            $subtotal = number_format($detalle->subtotal, 2, '.', '');
+            $descripcion = htmlspecialchars($detalle->vehiculo->descripcion_completa ?? 'Vehículo');
 
-    private function prepararPayloadFactura(Venta $venta): array
-    {
-        // Este es un ejemplo básico. En producción, se debe seguir 
-        // el estándar UBL 2.1 de la DIAN para Colombia
-        return [
-            'tipo_documento' => '01', // Factura electrónica de venta
-            'numero_factura' => $venta->numero_factura,
-            'fecha_emision' => $venta->fecha_venta->format('Y-m-d'),
-            'hora_emision' => $venta->created_at->format('H:i:s'),
-            'cliente' => [
-                'tipo_documento' => $venta->cliente->tipo_documento,
-                'numero_documento' => $venta->cliente->numero_documento,
-                'nombre' => $venta->cliente->nombre,
-                'direccion' => $venta->cliente->direccion,
-                'email' => $venta->cliente->email,
-            ],
-            'items' => $venta->detalles->map(function ($detalle) {
-                return [
-                    'codigo' => $detalle->vehiculo_id,
-                    'descripcion' => $detalle->vehiculo->descripcion_completa,
-                    'cantidad' => $detalle->cantidad,
-                    'precio_unitario' => $detalle->precio_unitario,
-                    'subtotal' => $detalle->subtotal,
-                ];
-            })->toArray(),
-            'impuestos' => [
-                'iva' => $venta->iva,
-            ],
-            'totales' => [
-                'subtotal' => $venta->subtotal,
-                'total' => $venta->total,
-            ]
-        ];
-    }
+            $xml .= <<<XML
+  <cac:InvoiceLine>
+    <cbc:ID>{$id}</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">{$cantidad}</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">{$subtotal}</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>{$descripcion}</cbc:Description>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">{$precio}</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
 
-    public function consultarEstadoFactura(string $cufe): array
-    {
-        $response = Http::timeout(30)
-            ->withHeaders([
-                'Authorization' => 'Basic ' . base64_encode($this->credentials['username'] . ':' . $this->credentials['password']),
-            ])
-            ->get($this->baseUrl . '/facturas/' . $cufe . '/estado');
-
-        if ($response->successful()) {
-            return $response->json();
+XML;
         }
 
-        throw new DianException(
-            'Error consultando estado de factura',
-            null,
-            'CONSULTA_ERROR',
-            $response->status()
-        );
+        // 🧮 Agregar totales
+        $subtotal = number_format($venta->subtotal, 2, '.', '');
+        $iva = number_format($venta->iva, 2, '.', '');
+        $total = number_format($venta->total, 2, '.', '');
+
+        $xml .= <<<XML
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="COP">{$iva}</cbc:TaxAmount>
+  </cac:TaxTotal>
+
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="COP">{$subtotal}</cbc:LineExtensionAmount>
+    <cbc:TaxInclusiveAmount currencyID="COP">{$total}</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="COP">{$total}</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+
+</Invoice>
+XML;
+
+        return $xml;
     }
 }
