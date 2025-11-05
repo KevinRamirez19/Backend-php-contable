@@ -10,6 +10,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\LibroDiarioExport;
 
+
 class ReporteController extends Controller
 {
     use ApiResponser;
@@ -109,7 +110,7 @@ public function descargarLibroDiarioExcel(Request $request)
 {
     $asientos = $this->reporteService->generarLibroDiario($request->all());
 
-    return Excel::download(new LibroDiarioExport($asientos), 'libro_diario.xlsx');
+    return Excel::download(new \App\Exports\LibroDiarioExport($asientos), 'libro_diario.xlsx');
 }
 
 }

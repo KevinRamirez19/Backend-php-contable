@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -16,35 +15,25 @@ class LibroDiarioExport implements FromArray, WithHeadings
 
     public function array(): array
     {
-        $rows = [];
+        $data = [];
 
         foreach ($this->asientos as $asiento) {
             foreach ($asiento['partidas'] as $p) {
-                $rows[] = [
-                    $asiento['fecha'],
-                    $asiento['descripcion'],
-                    $p['cuenta_codigo'] ?? '',
-                    $p['cuenta_nombre'] ?? '',
-                    $p['debe'] ?? 0,
-                    $p['haber'] ?? 0,
-                    $p['descripcion'] ?? ''
+                $data[] = [
+                    'Código Cuenta' => $p['cuenta_codigo'],
+                    'Nombre Cuenta' => $p['cuenta_nombre'],
+                    'Debe' => $p['debe'],
+                    'Haber' => $p['haber'],
+                    'Detalle' => $p['descripcion'],
                 ];
             }
         }
 
-        return $rows;
+        return $data;
     }
 
     public function headings(): array
     {
-        return [
-            'Fecha',
-            'Asiento',
-            'Código Cuenta',
-            'Nombre Cuenta',
-            'Debe',
-            'Haber',
-            'Descripción'
-        ];
+        return ['Código Cuenta', 'Nombre Cuenta', 'Debe', 'Haber', 'Detalle'];
     }
 }
