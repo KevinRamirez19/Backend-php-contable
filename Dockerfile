@@ -26,19 +26,14 @@ RUN useradd -G www-data,root -u 1000 -d /home/concesionario concesionario \
 # Directorio de trabajo
 WORKDIR /var/www
 
-# Copiar código
+# Copiar código con permisos correctos
 COPY --chown=concesionario:concesionario . .
+
+# Instalar dependencias de PHP con Composer
+RUN composer install --no-dev --optimize-autoloader
 
 # Cambiar a usuario no root
 USER concesionario
-# Instalar dependencias PHP y Composer
-RUN apt-get update && apt-get install -y unzip libzip-dev && docker-php-ext-install pdo pdo_mysql
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copiar el código y las dependencias
-WORKDIR /var/www
-COPY . .
-RUN composer install --no-dev --optimize-autoloader
-
+# Comando de inicio (Railway usará el puerto asignado automáticamente)
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${PORT}"]
-
