@@ -23,14 +23,17 @@ WORKDIR /var/www
 # Copiar solo los archivos necesarios primero
 COPY composer.json composer.lock ./
 
-# ⚠️ Copiar la carpeta database ANTES de composer install
+# Copiar la carpeta database antes del install
 COPY database ./database
 
 # Instalar dependencias PHP sin dev y con autoload optimizado
 RUN composer install --no-dev --optimize-autoloader
 
-# Luego copiar el resto del código fuente
+# Copiar el resto del código fuente
 COPY . .
+
+# ✅ Crear carpetas y dar permisos antes de cambiar de usuario
+RUN mkdir -p bootstrap/cache && chmod -R 777 bootstrap/cache storage
 
 # Crear usuario no root
 RUN useradd -G www-data,root -u 1000 -d /home/concesionario concesionario \
