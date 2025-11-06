@@ -3,11 +3,11 @@
         'name' => 'concesionario/app',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '4229b1faaafbd6ac4d0cd3c6efd98b6299f7d429',
+        'reference' => '4c417ba3e0f88aa41e0f068f53352e80b38e44c1',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'dev' => true,
+        'dev' => false,
     ),
     'versions' => array(
         'barryvdh/laravel-dompdf' => array(
@@ -58,7 +58,7 @@
         'concesionario/app' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '4229b1faaafbd6ac4d0cd3c6efd98b6299f7d429',
+            'reference' => '4c417ba3e0f88aa41e0f068f53352e80b38e44c1',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
