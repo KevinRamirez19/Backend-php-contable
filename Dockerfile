@@ -31,3 +31,14 @@ COPY --chown=concesionario:concesionario . .
 
 # Cambiar a usuario no root
 USER concesionario
+# Instalar dependencias PHP y Composer
+RUN apt-get update && apt-get install -y unzip libzip-dev && docker-php-ext-install pdo pdo_mysql
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copiar el código y las dependencias
+WORKDIR /var/www
+COPY . .
+RUN composer install --no-dev --optimize-autoloader
+
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${PORT}"]
+
