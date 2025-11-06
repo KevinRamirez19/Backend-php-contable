@@ -20,23 +20,27 @@ COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Copiar composer.json y composer.lock primero
+# Copiar solo los archivos necesarios primero
 COPY composer.json composer.lock ./
 
-# Copiar las carpetas que Composer necesita para autoload
+# ⚠️ Copiar la carpeta database ANTES de composer install
 COPY database ./database
 
-# Instalar dependencias
+# Instalar dependencias PHP sin dev y con autoload optimizado
 RUN composer install --no-dev --optimize-autoloader
 
-# Luego copiar el resto del código
+# Luego copiar el resto del código fuente
 COPY . .
 
-# Crear usuario para la app
+# Crear usuario no root
 RUN useradd -G www-data,root -u 1000 -d /home/concesionario concesionario \
     && mkdir -p /home/concesionario/.composer \
     && chown -R concesionario:concesionario /home/concesionario
 
 USER concesionario
 
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${PORT}"]
+# Exponer puerto Railway
+EXPOSE 8000
+
+# Comando por defecto (usar variable PORT de Railway)
+CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
