@@ -26,17 +26,17 @@ RUN useradd -G www-data,root -u 1000 -d /home/concesionario concesionario \
 # 5️⃣ Directorio de trabajo
 WORKDIR /var/www
 
-# 6️⃣ Copiar el código del proyecto antes de instalar dependencias
+# Copiar el código fuente
 COPY . .
 
-# 7️⃣ Instalar dependencias PHP
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# Instalar dependencias de Composer DENTRO del contenedor
+RUN composer clear-cache && composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# 8️⃣ Cambiar permisos
+# Permisos correctos
 RUN chown -R concesionario:www-data /var/www
 
-# 9️⃣ Cambiar a usuario no root
+# Cambiar a usuario no root
 USER concesionario
 
-# 🔟 Comando para iniciar Laravel
+# Comando de inicio
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${PORT}"]
