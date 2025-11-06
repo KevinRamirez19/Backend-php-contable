@@ -3,7 +3,7 @@
         'name' => 'concesionario/app',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '879ce1e36767c0d3fcd86e544a4427493db4b322',
+        'reference' => 'e359e894bfae6cdbb9e9e2aa4ae453c6e7d78959',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -58,7 +58,7 @@
         'concesionario/app' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '879ce1e36767c0d3fcd86e544a4427493db4b322',
+            'reference' => 'e359e894bfae6cdbb9e9e2aa4ae453c6e7d78959',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

@@ -1,6 +1,7 @@
+# Imagen base PHP con FPM
 FROM php:8.2-fpm
 
-# 1️⃣ Instalar dependencias del sistema
+# Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -12,31 +13,31 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 2️⃣ Instalar extensiones PHP
+# Instalar extensiones de PHP
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# 3️⃣ Instalar Composer
+# Instalar Composer
 COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
-# 4️⃣ Crear usuario para la app
+# Crear usuario
 RUN useradd -G www-data,root -u 1000 -d /home/concesionario concesionario \
     && mkdir -p /home/concesionario/.composer \
     && chown -R concesionario:concesionario /home/concesionario
 
-# 5️⃣ Directorio de trabajo
+# Establecer directorio de trabajo
 WORKDIR /var/www
 
-# Copiar el código fuente
+# Copiar archivos del proyecto
 COPY . .
 
-# Instalar dependencias de Composer DENTRO del contenedor
-RUN composer clear-cache && composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# 👇 Instalar dependencias de Composer como root para evitar errores de permisos
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# Permisos correctos
+# Dar permisos correctos
 RUN chown -R concesionario:www-data /var/www
 
-# Cambiar a usuario no root
+# Cambiar al usuario no root
 USER concesionario
 
-# Comando de inicio
+# Comando para iniciar Laravel
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${PORT}"]

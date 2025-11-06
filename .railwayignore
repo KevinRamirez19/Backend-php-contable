@@ -1,4 +1,5 @@
+node_modules
+vendor
+storage
 docker-compose.yml
 Dockerfile
-node_modules
-storage
