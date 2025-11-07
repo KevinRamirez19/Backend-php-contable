@@ -1,0 +1,6 @@
+touch database/seeders/.gitkeep
+   touch database/factories/.gitkeep
+   touch storage/framework/sessions/.gitkeep
+   touch storage/framework/views/.gitkeep
+   touch storage/framework/cache/.gitkeep
+   touch storage/logs/.gitkeep

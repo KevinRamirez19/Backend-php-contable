@@ -12,17 +12,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Copiar composer files
-COPY composer.json composer.lock ./
-
-# Copiar la estructura de directorios necesaria ANTES de composer install
-COPY database ./database
-COPY app ./app
-COPY bootstrap ./bootstrap
-COPY config ./config
-COPY routes ./routes
-COPY resources ./resources
-COPY public ./public
+# Copiar TODO el código fuente primero
+COPY . .
 
 # Crear directorios adicionales si no existen
 RUN mkdir -p database/seeders database/factories storage/framework/{sessions,views,cache} bootstrap/cache
@@ -55,7 +46,7 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Limpiar cachés de Laravel (solo si hay un .env válido)
+# Limpiar cachés de Laravel
 RUN php artisan config:clear || true \
     && php artisan cache:clear || true \
     && php artisan route:clear || true \
