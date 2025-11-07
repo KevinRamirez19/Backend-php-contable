@@ -2,48 +2,26 @@ FROM php:8.2-fpm
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    libzip-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev
 
-# Instalar extensiones PHP necesarias
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+# Instalar extensiones necesarias de PHP
+RUN docker-php-ext-install pdo pdo_mysql gd
 
-# Instalar Composer
-COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
-
+# Establecer directorio de trabajo
 WORKDIR /var/www
 
-# Copiar solo los archivos necesarios primero
-COPY composer.json composer.lock ./
-
-# Copiar la carpeta database antes del install
-COPY database ./database
-
-# Instalar dependencias PHP sin dev y con autoload optimizado
-RUN composer install --no-dev --optimize-autoloader
-
-# Copiar el resto del código fuente
+# Copiar archivos del proyecto
 COPY . .
 
-# ✅ Crear carpetas y dar permisos antes de cambiar de usuario
-RUN mkdir -p bootstrap/cache && chmod -R 777 bootstrap/cache storage
+# Instalar dependencias de Composer
+RUN curl -sS https://getcomposer.org/installer | php
+RUN php composer.phar install --no-dev --optimize-autoloader
 
-# Crear usuario no root
-RUN useradd -G www-data,root -u 1000 -d /home/concesionario concesionario \
-    && mkdir -p /home/concesionario/.composer \
-    && chown -R concesionario:concesionario /home/concesionario
+# Asignar permisos a Laravel
+RUN chmod -R 777 /var/www/storage /var/www/bootstrap/cache
 
-USER concesionario
-
-# Exponer puerto Railway
+# Exponer puerto
 EXPOSE 8000
 
-# Comando por defecto (usar variable PORT de Railway)
-CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
+# Ejecutar Laravel
+CMD php artisan serve --host=0.0.0.0 --port=8000
