@@ -1,34 +1,45 @@
-FROM php:8.2-fpm
+# 🧱 Etapa 1: Construcción con Composer
+FROM composer:2 AS build
 
-# Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev libzip-dev
+WORKDIR /app
 
-# Instalar extensiones necesarias de PHP
-RUN docker-php-ext-install pdo pdo_mysql gd zip
+# Copiar solo los archivos necesarios para instalar dependencias
+COPY composer.json composer.lock ./
 
-# Establecer directorio de trabajo
-WORKDIR /var/www
-
-# Copiar archivos del proyecto
-COPY . .
-
-# Instalar Composer globalmente
-RUN curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
-
-# Limpiar e instalar dependencias desde cero
-RUN rm -rf vendor composer.lock
+# Instalar dependencias de producción (sin dev)
 RUN composer install --no-dev --optimize-autoloader
 
-# Otorgar permisos correctos
-RUN chmod -R 777 /var/www/storage /var/www/bootstrap/cache
+# Copiar el resto del proyecto
+COPY . .
 
-# Exponer puerto (Railway ignora el número, pero es buena práctica)
+# 🧱 Etapa 2: Imagen base PHP con extensiones de Laravel
+FROM php:8.2-fpm
+
+# Instalar dependencias del sistema y extensiones PHP necesarias
+RUN apt-get update && apt-get install -y \
+    git zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev curl \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Copiar composer desde la imagen anterior
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copiar archivos desde la etapa build
+WORKDIR /var/www
+COPY --from=build /app .
+
+# 🔹 Regenerar autoload y limpiar cachés
+RUN composer dump-autoload -o
+RUN php artisan config:clear || true
+RUN php artisan cache:clear || true
+RUN php artisan route:clear || true
+RUN php artisan view:clear || true
+RUN php artisan optimize:clear || true
+
+# 🔹 Permisos de almacenamiento y caché
+RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache
+
+# Puerto expuesto
 EXPOSE 8000
 
-# 🔹 Comando de arranque
-# Limpiamos y optimizamos caches al iniciar el contenedor, no al construirlo
-CMD php artisan optimize:clear && \
-    php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan serve --host=0.0.0.0 --port=8000
+# Comando de inicio (usa JSON array para evitar errores de señales)
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
