@@ -13,11 +13,14 @@ WORKDIR /var/www
 # Copiar archivos del proyecto
 COPY . .
 
-# Instalar dependencias de Composer
+# Instalar Composer
 RUN curl -sS https://getcomposer.org/installer | php
+
+# Limpiar e instalar dependencias desde cero
+RUN rm -rf vendor composer.lock
 RUN php composer.phar install --no-dev --optimize-autoloader
 
-# Asignar permisos a Laravel
+# Otorgar permisos correctos
 RUN chmod -R 777 /var/www/storage /var/www/bootstrap/cache
 
 # Exponer puerto
