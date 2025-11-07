@@ -23,12 +23,12 @@ RUN composer install --no-dev --optimize-autoloader
 # Otorgar permisos correctos
 RUN chmod -R 777 /var/www/storage /var/www/bootstrap/cache
 
-# 🔹 Regenerar autoload y limpiar caché
-RUN composer dump-autoload -o
-RUN php artisan optimize:clear
-
-# Exponer puerto
+# Exponer puerto (Railway ignora el número, pero es buena práctica)
 EXPOSE 8000
 
-# Comando por defecto
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# 🔹 Comando de arranque
+# Limpiamos y optimizamos caches al iniciar el contenedor, no al construirlo
+CMD php artisan optimize:clear && \
+    php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan serve --host=0.0.0.0 --port=8000
