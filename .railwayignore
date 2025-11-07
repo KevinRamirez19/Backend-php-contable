@@ -1,5 +1,7 @@
-docker-compose.yml
-Dockerfile
-node_modules
-vendor
-storage
+/node_modules
+/vendor
+/storage/logs
+/storage/framework
+/docker
+/.git
+/.env
