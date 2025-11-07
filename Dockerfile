@@ -13,22 +13,22 @@ WORKDIR /var/www
 # Copiar archivos del proyecto
 COPY . .
 
-# Instalar Composer
-RUN curl -sS https://getcomposer.org/installer | php
+# Instalar Composer globalmente
+RUN curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
 
 # Limpiar e instalar dependencias desde cero
 RUN rm -rf vendor composer.lock
-RUN php composer.phar install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader
 
-# 🔹 Otorgar permisos ANTES de ejecutar Artisan
-RUN mkdir -p /var/www/storage /var/www/bootstrap/cache \
-    && chmod -R 777 /var/www/storage /var/www/bootstrap/cache
+# Otorgar permisos correctos
+RUN chmod -R 777 /var/www/storage /var/www/bootstrap/cache
 
-# 🔹 Ahora sí limpiar cachés y optimizar autoload
-RUN php artisan optimize:clear && composer dump-autoload -o
+# 🔹 Regenerar autoload y limpiar caché
+RUN composer dump-autoload -o
+RUN php artisan optimize:clear
 
 # Exponer puerto
 EXPOSE 8000
 
 # Comando por defecto
-CMD php artisan serve --host=0.0.0.0 --port=8000
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
