@@ -20,14 +20,15 @@ RUN curl -sS https://getcomposer.org/installer | php
 RUN rm -rf vendor composer.lock
 RUN php composer.phar install --no-dev --optimize-autoloader
 
-# Limpiar cachés de Laravel y optimizar autoload
-RUN php artisan optimize:clear && composer dump-autoload -o
+# 🔹 Otorgar permisos ANTES de ejecutar Artisan
+RUN mkdir -p /var/www/storage /var/www/bootstrap/cache \
+    && chmod -R 777 /var/www/storage /var/www/bootstrap/cache
 
-# Otorgar permisos correctos
-RUN chmod -R 777 /var/www/storage /var/www/bootstrap/cache
+# 🔹 Ahora sí limpiar cachés y optimizar autoload
+RUN php artisan optimize:clear && composer dump-autoload -o
 
 # Exponer puerto
 EXPOSE 8000
 
-# Comando por defecto para producción
+# Comando por defecto
 CMD php artisan serve --host=0.0.0.0 --port=8000
