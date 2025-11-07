@@ -1,43 +1,44 @@
-# Etapa base
-FROM php:8.2-fpm
+# Etapa 1: Construcción (instalación de dependencias)
+FROM php:8.2-fpm AS builder
 
-# Instalar dependencias del sistema necesarias para GD, ZIP y otras librerías
+# Instalar extensiones necesarias
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    zip \
-    unzip \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libzip-dev \
+    zip unzip git libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo_mysql zip bcmath
-
-# Establecer directorio de trabajo
-WORKDIR /var/www
-
-# Copiar archivos composer antes del resto del código (para aprovechar cache de Docker)
-COPY composer.json composer.lock ./
+    && docker-php-ext-install pdo pdo_mysql gd mbstring exif pcntl bcmath xml zip
 
 # Instalar Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+
+# Copiar solo los archivos necesarios para instalar dependencias
+COPY composer.json composer.lock ./
 
 # Instalar dependencias de producción
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --no-interaction --prefer-dist --no-progress
 
-# Copiar todo el proyecto al contenedor
+# Etapa 2: Producción
+FROM php:8.2-fpm
+
+WORKDIR /var/www
+
+# Copiar dependencias desde el builder
+COPY --from=builder /var/www/vendor /var/www/vendor
+
+# Copiar todo el código fuente del proyecto
 COPY . .
 
-# Dar permisos a carpetas necesarias
-RUN chmod -R 777 storage bootstrap/cache
+# Crear carpetas necesarias (en caso de que falten)
+RUN mkdir -p database/seeders storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
-# Limpiar caché de Laravel y optimizar
-RUN php artisan optimize:clear || true
-RUN composer dump-autoload -o
+# Optimizar Laravel
+RUN php artisan config:clear || true \
+    && php artisan cache:clear || true \
+    && php artisan route:clear || true \
+    && php artisan view:clear || true \
+    && composer dump-autoload --optimize
 
-# Exponer el puerto
-EXPOSE 8000
-
-# Comando para ejecutar la aplicación
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+EXPOSE 9000
+CMD ["php-fpm"]
