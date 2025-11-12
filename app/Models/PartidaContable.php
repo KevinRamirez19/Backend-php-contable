@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PartidaContable extends Model 
+class PartidaContable extends Model
 {
     use HasFactory;
 
@@ -16,6 +16,7 @@ class PartidaContable extends Model
         'cuenta_id',
         'debe',
         'haber',
+        'tipo', // Opcional: indica si la partida es "debe" o "haber"
         'descripcion',
     ];
 
@@ -24,11 +25,11 @@ class PartidaContable extends Model
         'haber' => 'decimal:2',
     ];
 
-    public $timestamps = false;
+    public $timestamps = true;
 
-    /**
-     * Relaciones
-     */
+    // ==========================
+    // 🔹 Relaciones
+    // ==========================
     public function asiento()
     {
         return $this->belongsTo(AsientoContable::class, 'asiento_id');
@@ -39,48 +40,21 @@ class PartidaContable extends Model
         return $this->belongsTo(Cuenta::class, 'cuenta_id');
     }
 
-    /**
-     * Scopes
-     */
-    public function scopeByCuenta($query, $cuentaId)
+    // ==========================
+    // 🔹 Métodos de utilidad
+    // ==========================
+    public function getNombreCuentaAttribute(): string
     {
-        return $query->where('cuenta_id', $cuentaId);
+        return $this->cuenta?->nombre ?? 'Cuenta no encontrada';
     }
 
-    public function scopeDebe($query)
+    public function getCodigoCuentaAttribute(): string
     {
-        return $query->where('debe', '>', 0);
+        return $this->cuenta?->codigo ?? 'N/A';
     }
 
-    public function scopeHaber($query)
+    public function getTipoCuentaAttribute(): string
     {
-        return $query->where('haber', '>', 0);
-    }
-
-    /**
-     * Métodos de utilidad
-     */
-    public function getMovimientoAttribute()
-    {
-        if ($this->debe > 0) {
-            return 'Débito';
-        } else {
-            return 'Crédito';
-        }
-    }
-
-    public function getMontoAttribute()
-    {
-        return $this->debe > 0 ? $this->debe : $this->haber;
-    }
-
-    public function getNombreCuentaAttribute()
-    {
-        return $this->cuenta ? $this->cuenta->nombre : 'Cuenta no encontrada';
-    }
-
-    public function getCodigoCuentaAttribute()
-    {
-        return $this->cuenta ? $this->cuenta->codigo : 'N/A';
+        return $this->cuenta?->tipo ?? 'Desconocido';
     }
 }

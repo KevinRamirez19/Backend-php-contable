@@ -4,118 +4,94 @@ namespace App\Http\Controllers;
 
 use App\Models\AsientoContable;
 use App\Models\PartidaContable;
+use App\Models\Movimiento;
+use App\Models\Cuenta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 
 class AsientoContableController extends Controller
 {
-    // 🔹 Obtener todos los asientos con sus partidas y cuentas
     public function index()
     {
-        try {
-            $asientos = AsientoContable::with(['partidas.cuenta'])->get(); // 👈 importante: carga la cuenta
-
-            return response()->json([
-                'success' => true,
-                'data' => $asientos
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al obtener los asientos contables: ' . $e->getMessage()
-            ], 500);
-        }
+        $asientos = AsientoContable::with(['partidas.cuenta'])->get();
+        return response()->json(['success' => true, 'data' => $asientos], 200);
     }
-
-    // 🔹 Guardar nuevo asiento contable
-    public function store(Request $request)
-    {
-        $request->validate([
-            'codigo' => 'required|string|max:20|unique:asientos_contables,codigo',
+public function store(Request $request)
+{
+    try {
+        $validatedData = $request->validate([
+            'codigo' => 'required|string',
             'fecha' => 'required|date',
-            'descripcion' => 'required|string|max:255',
+            'descripcion' => 'required|string',
             'partidas' => 'required|array|min:2',
-            'partidas.*.cuenta_id' => 'required|integer|exists:cuentas,id',
-            'partidas.*.debe' => 'required|numeric|min:0',
-            'partidas.*.haber' => 'required|numeric|min:0',
-            'partidas.*.descripcion' => 'nullable|string|max:255',
+            'partidas.*.cuenta_id' => 'required|exists:cuentas,id',
+            'partidas.*.debe' => 'nullable|numeric|min:0',
+            'partidas.*.haber' => 'nullable|numeric|min:0',
+            'partidas.*.descripcion' => 'nullable|string',
         ]);
 
-        DB::beginTransaction();
-        try {
-            // Crear asiento
-            $asiento = AsientoContable::create([
-                'codigo' => $request->codigo,
-                'fecha' => $request->fecha,
-                'descripcion' => $request->descripcion,
-                'compra_id' => $request->compra_id ?? null,
-                'venta_id' => $request->venta_id ?? null,
-                'created_by' => auth()->id() ?? null,
-            ]);
+        // Crear el asiento contable
+        $asiento = new AsientoContable();
+        $asiento->codigo = $validatedData['codigo'];
+        $asiento->fecha = $validatedData['fecha'];
+        $asiento->descripcion = $validatedData['descripcion'];
+        $asiento->created_by = auth()->id() ?? 1;
+        $asiento->save();
 
-            // Crear partidas
-            foreach ($request->partidas as $partida) {
-                PartidaContable::create([
-                    'asiento_id' => $asiento->id,
-                    'cuenta_id' => $partida['cuenta_id'],
-                    'debe' => $partida['debe'],
-                    'haber' => $partida['haber'],
-                    'descripcion' => $partida['descripcion'] ?? '',
-                ]);
-            }
+        $totalDebe = 0;
+        $totalHaber = 0;
 
-            DB::commit();
+        // Recorrer las partidas
+        foreach ($validatedData['partidas'] as $partidaData) {
+            $partida = new PartidaContable();
+            $partida->asiento_id = $asiento->id;
+            $partida->cuenta_id = $partidaData['cuenta_id'];
+            $partida->descripcion = $partidaData['descripcion'] ?? null;
+            $partida->debe = $partidaData['debe'] ?? 0;
+            $partida->haber = $partidaData['haber'] ?? 0;
+            $partida->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Asiento contable creado correctamente',
-                'data' => $asiento->load('partidas.cuenta') // 👈 carga cuenta también aquí
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Error creando asiento: ' . $e->getMessage(), $request->all());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al crear el asiento contable: ' . $e->getMessage()
-            ], 500);
+            $totalDebe += $partida->debe;
+            $totalHaber += $partida->haber;
         }
-    }
 
-    // 🔹 Mostrar un asiento con partidas y cuentas
+        // Guardar totales balanceados en el asiento
+        $asiento->total_debe = $totalDebe;
+        $asiento->total_haber = $totalHaber;
+        $asiento->save();
+
+        // Validar que esté balanceado
+        if (round($totalDebe, 2) !== round($totalHaber, 2)) {
+            throw new \Exception('El total del debe y el haber deben estar balanceados.');
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Asiento contable creado correctamente.',
+            'data' => $asiento->load('partidas.cuenta')
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al crear el asiento: ' . $e->getMessage(),
+        ], 400);
+    }
+}
+
     public function show($id)
     {
-        try {
-            $asiento = AsientoContable::with(['partidas.cuenta'])->findOrFail($id); // 👈 incluye cuenta
-
-            return response()->json([
-                'success' => true,
-                'data' => $asiento
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Asiento no encontrado: ' . $e->getMessage()
-            ], 404);
-        }
+        $asiento = AsientoContable::with(['partidas.cuenta'])->findOrFail($id);
+        return response()->json(['success' => true, 'data' => $asiento]);
     }
 
-    // 🔹 Eliminar asiento
     public function destroy($id)
     {
-        try {
-            $asiento = AsientoContable::findOrFail($id);
-            $asiento->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Asiento contable eliminado correctamente'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al eliminar el asiento: ' . $e->getMessage()
-            ], 500);
-        }
+        $asiento = AsientoContable::findOrFail($id);
+        $asiento->partidas()->delete();
+        Movimiento::where('asiento_id', $asiento->id)->delete();
+        $asiento->delete();
+        return response()->json(['success' => true, 'message' => 'Asiento eliminado correctamente']);
     }
 }

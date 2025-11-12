@@ -15,8 +15,8 @@ return new class extends Migration
             $table->string('modelo', 50);
             $table->year('año');
             $table->string('color', 30)->nullable();
-            $table->string('placa', 15)->unique()->nullable();
-            $table->string('vin', 17)->unique()->nullable();
+            $table->string('vin', 20)->unique(); // 20 caracteres es suficiente
+            
             $table->decimal('precio_compra', 12, 2);
             $table->decimal('precio_venta', 12, 2);
             $table->enum('estado', ['DISPONIBLE', 'VENDIDO', 'MANTENIMIENTO'])->default('DISPONIBLE');

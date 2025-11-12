@@ -50,7 +50,7 @@ class VentaService
         $sortDirection = $filters['sort_direction'] ?? 'desc';
 
         return $query->orderBy($sortField, $sortDirection)
-                     ->paginate($filters['per_page'] ?? 15);
+            ->paginate($filters['per_page'] ?? 15);
     }
 
     /**
@@ -80,6 +80,7 @@ class VentaService
         return DB::transaction(function () use ($data) {
             $venta = Venta::create([
                 'cliente_id' => $data['cliente_id'],
+                'numero_factura' => $data['numero_factura'] ?? ('FAC-' . now()->timestamp),
                 'fecha_venta' => now(),
                 'subtotal' => 0,
                 'iva' => 0,

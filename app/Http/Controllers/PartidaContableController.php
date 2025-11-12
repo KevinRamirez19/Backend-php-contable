@@ -41,10 +41,10 @@ class PartidaContableController extends Controller
         $request->validate([
             'asiento_id' => 'required|integer',
             'cuenta_id' => 'required|integer',
-            'debe' => 'required|numeric',
-            'haber' => 'required|numeric',
+            'tipo' => 'required|in:debe,haber',
             'descripcion' => 'nullable|string',
         ]);
+
 
         $partida = PartidaContable::create($request->all());
 

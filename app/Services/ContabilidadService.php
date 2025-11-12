@@ -56,12 +56,14 @@ class ContabilidadService
     {
         return DB::transaction(function () use ($compra) {
             $asiento = AsientoContable::create([
-                'codigo' => 'AS-C-' . $compra->id,
-                'descripcion' => "Compra de vehículos - Factura {$compra->numero_factura}",
-                'fecha' => $compra->fecha_compra,
-                'compra_id' => $compra->id,
-                'created_by' => auth()->id(),
-            ]);
+    'codigo' => 'AS-V-' . $venta->id,
+    'descripcion' => "Venta de vehículos - Factura {$venta->numero_factura}",
+    'fecha' => $venta->fecha_venta,
+    'venta_id' => $venta->id,
+    'total' => $venta->total, // ✅ agrega esto si deseas reflejar el total
+    'created_by' => auth()->id(),
+]);
+
 
             // Partida 1: Débito a Inventario
             PartidaContable::create([

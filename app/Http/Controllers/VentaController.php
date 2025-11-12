@@ -11,6 +11,8 @@ use Illuminate\Http\JsonResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class VentaController extends Controller
 {
@@ -27,7 +29,7 @@ class VentaController extends Controller
         ]);
     }
 
-    // 📋 Listar ventas
+    // Listar ventas
     public function index(): JsonResponse
     {
         try {
@@ -41,33 +43,55 @@ class VentaController extends Controller
         }
     }
 
-    // 💰 Registrar venta
     public function store(StoreVentaRequest $request): JsonResponse
-    {
-        try {
-            $venta = $this->ventaService->crearVenta($request->validated());
+{
+    Log::info('🟢 Iniciando registro de venta', ['data' => $request->all()]);
 
-            // 🔹 Generar CUFE real
-            $datosCufe = $venta->numero_factura
-                . $venta->fecha_venta
-                . '900123456' // NIT emisor
-                . $venta->cliente->documento
-                . $venta->total
-                . $venta->iva;
+    try {
+        // Crear la venta usando el servicio
+        $venta = $this->ventaService->crearVenta($request->validated());
+        Log::info('✅ Venta creada correctamente', ['venta_id' => $venta->id ?? null]);
 
-            $venta->cufe = hash('sha384', $datosCufe);
-            $venta->save();
+        // Calcular CUFE
+        $datosCufe = $venta->numero_factura
+            . $venta->fecha_venta
+            . '900123456'
+            . $venta->cliente->documento
+            . $venta->total
+            . $venta->iva;
 
-            return $this->createdResponse(
-                new VentaResource($venta),
-                'Venta registrada exitosamente'
-            );
-        } catch (\Exception $e) {
-            return $this->errorResponse('Error al registrar la venta: ' . $e->getMessage(), 500);
-        }
+        $venta->cufe = hash('sha384', $datosCufe);
+        $venta->save();
+        Log::info('🔢 CUFE generado y guardado', ['cufe' => $venta->cufe]);
+
+        // 🚫 Eliminado: creación automática de asiento contable
+        Log::warning('⚠️ Asiento contable NO generado automáticamente. Deberá crearse manualmente desde el módulo contable.', [
+            'venta_id' => $venta->id,
+            'numero_factura' => $venta->numero_factura
+        ]);
+
+        return $this->createdResponse(
+            new VentaResource($venta),
+            'Venta registrada exitosamente (sin asiento contable automático)'
+        );
+    } catch (\Exception $e) {
+        Log::error('❌ Error al registrar venta', [
+            'mensaje' => $e->getMessage(),
+            'archivo' => $e->getFile(),
+            'linea' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
     }
+}
 
-    // 🔍 Mostrar detalle de venta
+
+    // Mostrar detalle de venta
     public function show(int $id): JsonResponse
     {
         try {
@@ -80,16 +104,14 @@ class VentaController extends Controller
         }
     }
 
-    // 🧾 Descargar factura PDF
+    // Descargar factura PDF
     public function descargarFacturaPDF(int $id)
     {
         $venta = Venta::with(['cliente', 'detalles.vehiculo'])->find($id);
         if (!$venta) return $this->errorResponse('Venta no encontrada', 404);
 
-        // Validar token opcional
-        if (request()->has('token')) {
-            $user = Auth::guard('api')->user();
-            if (!$user) return $this->errorResponse('Token inválido', 401);
+        if (request()->has('token') && !Auth::guard('api')->user()) {
+            return $this->errorResponse('Token inválido', 401);
         }
 
         $pdf = Pdf::loadView('facturas.factura', ['venta' => $venta])
@@ -98,21 +120,17 @@ class VentaController extends Controller
         return $pdf->stream('factura_' . $venta->numero_factura . '.pdf');
     }
 
-    // 📝 Descargar factura XML UBL 2.1 DIAN
+    // Descargar factura XML UBL 2.1 DIAN
     public function descargarFacturaXML(int $id)
     {
         $venta = Venta::with(['cliente', 'detalles.vehiculo'])->find($id);
         if (!$venta) return $this->errorResponse('Venta no encontrada', 404);
 
-        // Validar token opcional
-        if (request()->has('token')) {
-            $user = Auth::guard('api')->user();
-            if (!$user) return $this->errorResponse('Token inválido', 401);
+        if (request()->has('token') && !Auth::guard('api')->user()) {
+            return $this->errorResponse('Token inválido', 401);
         }
 
-        // Construir XML UBL 2.1
         $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><Invoice></Invoice>');
-
         $xml->addAttribute('xmlns', 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2');
         $xml->addChild('cbc:ID', $venta->numero_factura);
         $xml->addChild('cbc:IssueDate', $venta->fecha_venta);
@@ -143,7 +161,6 @@ class VentaController extends Controller
             $price->addChild('cbc:PriceAmount', $detalle->precio_unitario);
         }
 
-        // Totales
         $total = $xml->addChild('cac:LegalMonetaryTotal');
         $total->addChild('cbc:LineExtensionAmount', $venta->subtotal);
         $total->addChild('cbc:TaxInclusiveAmount', $venta->total);
