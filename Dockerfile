@@ -1,7 +1,7 @@
 # Etapa base: PHP con extensiones necesarias
 FROM php:8.2-fpm
 
-# Instalar dependencias del sistema y extensiones PHP
+# Instalar dependencias del sistema y extensiones PHP requeridas por Laravel
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -9,15 +9,19 @@ RUN apt-get update && apt-get install -y \
     zip \
     git \
     unzip \
+    curl \
     libonig-dev \
     libxml2-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath opcache
 
+# Instalar Composer globalmente
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
 # Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiar composer antes del código para aprovechar caché de dependencias
+# Copiar los archivos composer primero para aprovechar la caché de dependencias
 COPY composer.json composer.lock ./
 
 # Crear carpetas necesarias antes de instalar dependencias
@@ -29,7 +33,7 @@ RUN composer install --no-dev --no-interaction --prefer-dist --no-progress --opt
 # Copiar todo el código fuente
 COPY . .
 
-# Crear y asignar permisos a las carpetas necesarias
+# Crear y asignar permisos correctos
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     storage/logs \
     bootstrap/cache \
@@ -37,7 +41,7 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
     && chmod -R 775 storage bootstrap/cache
 
 # Exponer el puerto 8080
-EXPOSE 9000
+EXPOSE 8080
 
 # Comando por defecto para ejecutar Laravel
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
