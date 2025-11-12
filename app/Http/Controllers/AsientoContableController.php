@@ -21,8 +21,11 @@ class AsientoContableController extends Controller
 public function store(Request $request)
 {
     try {
+        // 🟡 Log inicial: datos recibidos desde el frontend
+        Log::info('📩 Datos recibidos en store():', $request->all());
+
+        // 🔍 Validación de campos esperados
         $validatedData = $request->validate([
-            'codigo' => 'required|string',
             'fecha' => 'required|date',
             'descripcion' => 'required|string',
             'partidas' => 'required|array|min:2',
@@ -32,20 +35,30 @@ public function store(Request $request)
             'partidas.*.descripcion' => 'nullable|string',
         ]);
 
-        // Crear el asiento contable
-        $asiento = new AsientoContable();
-        $asiento->codigo = $validatedData['codigo'];
+        Log::info('✅ Datos validados correctamente:', $validatedData);
+
+        // 🔹 Generar código automáticamente
+        $ultimoAsiento = \App\Models\AsientoContable::latest('id')->first();
+        $nuevoCodigo = 'AS-' . str_pad(($ultimoAsiento ? $ultimoAsiento->id + 1 : 1), 3, '0', STR_PAD_LEFT);
+
+        // 🧾 Crear el asiento
+        $asiento = new \App\Models\AsientoContable();
+        $asiento->codigo = $nuevoCodigo;
         $asiento->fecha = $validatedData['fecha'];
         $asiento->descripcion = $validatedData['descripcion'];
         $asiento->created_by = auth()->id() ?? 1;
         $asiento->save();
 
+        Log::info('🆕 Asiento creado:', $asiento->toArray());
+
         $totalDebe = 0;
         $totalHaber = 0;
 
-        // Recorrer las partidas
-        foreach ($validatedData['partidas'] as $partidaData) {
-            $partida = new PartidaContable();
+        // 💾 Guardar partidas
+        foreach ($validatedData['partidas'] as $index => $partidaData) {
+            Log::info("➡️ Guardando partida {$index}:", $partidaData);
+
+            $partida = new \App\Models\PartidaContable();
             $partida->asiento_id = $asiento->id;
             $partida->cuenta_id = $partidaData['cuenta_id'];
             $partida->descripcion = $partidaData['descripcion'] ?? null;
@@ -57,28 +70,44 @@ public function store(Request $request)
             $totalHaber += $partida->haber;
         }
 
-        // Guardar totales balanceados en el asiento
-        $asiento->total_debe = $totalDebe;
+        // ⚖️ Actualizar totales y verificar balance
+       /* $asiento->total_debe = $totalDebe;
         $asiento->total_haber = $totalHaber;
-        $asiento->save();
+        $asiento->save();*/
 
-        // Validar que esté balanceado
+        Log::info('📊 Totales calculados:', [
+            'total_debe' => $totalDebe,
+            'total_haber' => $totalHaber,
+        ]);
+
         if (round($totalDebe, 2) !== round($totalHaber, 2)) {
             throw new \Exception('El total del debe y el haber deben estar balanceados.');
         }
+
+        Log::info('✅ Asiento contable creado correctamente.');
 
         return response()->json([
             'success' => true,
             'message' => 'Asiento contable creado correctamente.',
             'data' => $asiento->load('partidas.cuenta')
         ]);
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
+        // 🚨 Log completo del error
+        Log::error('❌ Error al crear asiento:', [
+            'mensaje' => $e->getMessage(),
+            'linea' => $e->getLine(),
+            'archivo' => $e->getFile(),
+            'traza' => $e->getTraceAsString(),
+        ]);
+
         return response()->json([
             'success' => false,
             'message' => 'Error al crear el asiento: ' . $e->getMessage(),
         ], 400);
     }
 }
+
+
 
     public function show($id)
     {
