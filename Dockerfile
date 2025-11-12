@@ -1,49 +1,48 @@
 # Etapa 1: Builder
-FROM composer:2 AS builder
+FROM php:8.2-fpm AS builder
+
+# Instalar dependencias del sistema y extensiones necesarias para Composer y Laravel
+RUN apt-get update && apt-get install -y \
+    zip unzip git libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev libzip-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath opcache zip
+
+# Instalar Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copiar composer.json y composer.lock primero (mejor caching)
+# Copiar archivos composer
 COPY composer.json composer.lock ./
 
-# Crear carpetas vacías para evitar errores de autoload
+# Crear carpetas para evitar error de autoload
 RUN mkdir -p database/seeders database/factories
 
-# Instalar dependencias sin las de desarrollo
+# Instalar dependencias (ahora sí detecta GD)
 RUN composer install --no-dev --no-interaction --prefer-dist --no-progress --optimize-autoloader
 
 
-# Etapa 2: Aplicación PHP
-FROM php:8.2-fpm AS app
+# Etapa 2: Producción
+FROM php:8.2-fpm
 
-# Instalar extensiones necesarias para Laravel
+# Instalar extensiones requeridas por Laravel
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    zip \
-    git \
-    unzip \
-    libonig-dev \
-    libxml2-dev \
+    libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath opcache
+    && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath opcache zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiar dependencias instaladas desde builder
+# Copiar vendor del builder
 COPY --from=builder /app/vendor ./vendor
 
-# Copiar el resto del código fuente
+# Copiar el resto del proyecto
 COPY . .
 
-# Dar permisos a storage y bootstrap
+# Permisos
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Exponer puerto del servidor PHP-FPM
 EXPOSE 9000
-
-# Comando de inicio del contenedor
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
