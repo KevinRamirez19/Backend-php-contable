@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libzip-dev \
     zip \
     git \
     unzip \
@@ -13,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath opcache
+    && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath zip opcache
 
 # Instalar Composer globalmente
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -21,7 +22,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiar los archivos composer primero para aprovechar la caché de dependencias
+# Copiar los archivos composer primero (para aprovechar la caché de dependencias)
 COPY composer.json composer.lock ./
 
 # Crear carpetas necesarias antes de instalar dependencias
@@ -41,7 +42,7 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
     && chmod -R 775 storage bootstrap/cache
 
 # Exponer el puerto 8080
-EXPOSE 8080
+EXPOSE 9000
 
 # Comando por defecto para ejecutar Laravel
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
