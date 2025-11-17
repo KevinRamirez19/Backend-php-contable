@@ -32,15 +32,15 @@ RUN chmod -R 775 storage bootstrap/cache
 # Configurar Apache para Laravel
 RUN echo 'ServerName localhost' >> /etc/apache2/apache2.conf
 
-# Configurar virtual host
-RUN echo '<VirtualHost *:80>\n\
-    DocumentRoot /var/www/html/public\n\
-    <Directory /var/www/html/public>\n\
-        Options Indexes FollowSymLinks\n\
-        AllowOverride All\n\
-        Require all granted\n\
-        FallbackResource /index.php\n\
-    </Directory>\n\
+# Configurar virtual host CORREGIDO
+RUN echo '<VirtualHost *:80>\
+    DocumentRoot /var/www/html/public\
+    <Directory /var/www/html/public>\
+        Options Indexes FollowSymLinks\
+        AllowOverride All\
+        Require all granted\
+        FallbackResource /index.php\
+    </Directory>\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 EXPOSE 80
