@@ -24,7 +24,7 @@ RUN composer install --no-dev --optimize-autoloader
 # Configurar permisos
 RUN chmod -R 775 storage bootstrap/cache
 
-EXPOSE 80
+EXPOSE 8080
 
 # Comando simple y confiable
 CMD php -S 0.0.0.0:80 public/index.php
