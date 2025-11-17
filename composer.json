@@ -8,9 +8,14 @@
         "guzzlehttp/guzzle": "^7.10",
         "maatwebsite/excel": "^3.1",
         "phpoffice/phpspreadsheet": "^1.30",
-        "barryvdh/laravel-dompdf": "2.1",
+        "barryvdh/laravel-dompdf": "^2.1",
         "laravel/sanctum": "^3.3"
-        
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "platform-check": false
     },
     "autoload": {
         "psr-4": {
@@ -20,6 +25,6 @@
             "database/seeders"
         ]
     },
-    "minimum-stability": "stable", 
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

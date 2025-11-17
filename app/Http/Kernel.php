@@ -8,7 +8,7 @@ class Kernel extends HttpKernel
 {
     protected $middleware = [
         \App\Http\Middleware\TrustProxies::class,
-        \Illuminate\Http\Middleware\HandleCors::class, // ✔️ Aquí está bien
+        \Illuminate\Http\Middleware\HandleCors::class, // ✅ SOLO AQUÍ
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
@@ -26,7 +26,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            // ❌ QUITAR EL HandleCors DE AQUÍ
+            // ❌ ELIMINAR HandleCors DE AQUÍ
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
