@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "rm -rf vendor composer.lock && composer clear-cache && composer install --no-dev --optimize-autoloader --no-scripts --prefer-dist && php artisan config:cache && php artisan route:cache && php -S 0.0.0.0:$PORT -t public",
+    "startCommand": "APP_DEBUG=true php artisan config:clear && php artisan cache:clear && php artisan route:clear && php artisan config:cache && php artisan route:cache && php -S 0.0.0.0:$PORT -t public",
     "restartPolicyType": "ON_FAILURE"
   }
 }
