@@ -26,8 +26,8 @@ COPY . .
 RUN mkdir -p storage/framework/{sessions,views,cache} bootstrap/cache
 RUN chmod -R 775 storage bootstrap/cache
 
-# Puerto
-EXPOSE 8080
+# Puerto (Railway usa variable PORT)
+EXPOSE $PORT
 
-# Comando simple y directo
-CMD ["php", "-S", "0.0.0.0:8080", "-t", "public", "public/index.php"]
+# Comando CORREGIDO - usa la variable $PORT de Railway
+CMD php -S 0.0.0.0:$PORT -t public public/index.php
