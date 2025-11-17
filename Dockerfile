@@ -15,9 +15,14 @@ RUN a2enmod rewrite
 
 WORKDIR /var/www/html
 
+# Crear carpetas necesarias de Laravel ANTES de composer install
+RUN mkdir -p database/seeders database/factories
+
 # Copiar primero composer para cachear dependencias
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+# Instalar dependencias (sin --no-scripts para que funcione post-install)
+RUN composer install --no-dev --optimize-autoloader
 
 # Copiar el resto de la aplicación
 COPY . .
@@ -33,5 +38,5 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 
 EXPOSE 80
 
-# Comando de inicio (las migraciones se ejecutan en el start command de Railway)
+# Comando de inicio
 CMD ["apache2-foreground"]
