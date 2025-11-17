@@ -10,13 +10,10 @@ RUN apt-get update && apt-get install -y \
 # Instalar Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Directorio de trabajo
 WORKDIR /app
 
 # Copiar archivos de composer primero
 COPY composer.json composer.lock ./
-
-# Instalar dependencias
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Copiar el resto de la aplicación
@@ -26,8 +23,7 @@ COPY . .
 RUN mkdir -p storage/framework/{sessions,views,cache} bootstrap/cache
 RUN chmod -R 775 storage bootstrap/cache
 
-# Puerto (Railway usa variable PORT)
 EXPOSE $PORT
 
-# Comando CORREGIDO - usa la variable $PORT de Railway
+# Comando CORREGIDO (sin duplicación)
 CMD php -S 0.0.0.0:$PORT -t public public/index.php
