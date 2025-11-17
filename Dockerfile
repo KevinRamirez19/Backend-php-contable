@@ -1,32 +1,39 @@
-FROM php:8.2-cli
+FROM php:8.2-apache
 
-# Instalar extensiones PHP necesarias (versión optimizada)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpng-dev libjpeg-dev libfreetype6-dev \
-    libzip-dev zip unzip curl \
+# Instalar extensiones PHP
+RUN apt-get update && apt-get install -y \
+    libpng-dev libjpeg-dev libfreetype6-dev libzip-dev \
+    zip git unzip curl libonig-dev libxml2-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mbstring zip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath zip
 
 # Instalar Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-WORKDIR /app
+# Habilitar mod_rewrite
+RUN a2enmod rewrite
 
-# Copiar archivos de composer primero
-COPY composer.json composer.lock ./
-
-# Instalar dependencias
-RUN composer install --no-dev --optimize-autoloader --no-scripts
-
-# Copiar el resto de la aplicación
-COPY . .
+WORKDIR /var/www/html
 
 # Crear carpetas necesarias
-RUN mkdir -p storage/framework/{sessions,views,cache} bootstrap/cache
+RUN mkdir -p database/seeders database/factories
+
+# Copiar composer
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader
+
+# Copiar aplicación
+COPY . .
+
+# Configurar permisos
+RUN chown -R www-data:www-data storage bootstrap/cache
 RUN chmod -R 775 storage bootstrap/cache
 
-EXPOSE $PORT
+# Configurar document root
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
-# Comando directo
-CMD php -S 0.0.0.0:$PORT -t public public/index.php
+EXPOSE 80
+
+# Comando simple - las migraciones se ejecutan en el Start Command
+CMD ["apache2-foreground"]
