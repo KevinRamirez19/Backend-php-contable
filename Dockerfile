@@ -42,7 +42,7 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
     && chmod -R 775 storage bootstrap/cache
 
 # Exponer el puerto 8080
-EXPOSE 8080
+EXPOSE 8000
 
 # Comando por defecto para ejecutar Laravel
 CMD ["php-fpm"]
