@@ -1,7 +1,7 @@
-# Etapa base: PHP con extensiones necesarias
-FROM php:8.2-fpm
+# Usa una imagen con servidor web incluido
+FROM php:8.2-apache
 
-# Instalar dependencias del sistema y extensiones PHP requeridas por Laravel
+# Instalar dependencias
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -16,33 +16,38 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath zip opcache
 
-# Instalar Composer globalmente
+# Instalar Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Habilitar mod_rewrite para Apache
+RUN a2enmod rewrite
 
 # Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiar los archivos composer primero (para aprovechar la caché de dependencias)
+# Copiar archivos composer primero
 COPY composer.json composer.lock ./
 
-# Crear carpetas necesarias antes de instalar dependencias
+# Crear carpetas necesarias
 RUN mkdir -p database/seeders database/factories
 
-# Instalar dependencias de Laravel (sin las de desarrollo)
+# Instalar dependencias
 RUN composer install --no-dev --no-interaction --prefer-dist --no-progress --optimize-autoloader
 
 # Copiar todo el código fuente
 COPY . .
 
-# Crear y asignar permisos correctos
-RUN mkdir -p storage/framework/{sessions,views,cache} \
-    storage/logs \
-    bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
+# Configurar permisos
+RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Exponer el puerto 8080
-EXPOSE 8000
+# Configurar Apache para usar public/ como document root
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Comando por defecto para ejecutar Laravel
-CMD ["php-fpm"]
+# Exponer puerto 80 (Apache)
+EXPOSE 80
+
+# Comando por defecto
+CMD ["apache2-foreground"]
