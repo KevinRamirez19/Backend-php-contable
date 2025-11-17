@@ -1,34 +1,39 @@
-FROM php:8.2-cli
+FROM php:8.2-apache
 
-# Instalar dependencias del sistema
+# Instalar extensiones PHP
 RUN apt-get update && apt-get install -y \
-    zip unzip git curl \
-    libpng-dev libjpeg-dev libfreetype6-dev \
-    libzip-dev libonig-dev libxml2-dev \
+    libpng-dev libjpeg-dev libfreetype6-dev libzip-dev \
+    zip git unzip curl libonig-dev libxml2-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath zip opcache \
-    && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install gd pdo pdo_mysql mbstring exif pcntl bcmath zip
 
 # Instalar Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Establecer directorio de trabajo
-WORKDIR /app
+# Habilitar mod_rewrite
+RUN a2enmod rewrite
 
-# Copiar archivos composer primero (para cache de dependencias)
+WORKDIR /var/www/html
+
+# Crear carpetas necesarias
+RUN mkdir -p database/seeders database/factories
+
+# Copiar composer
 COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader
 
-# Instalar dependencias de PHP SIN CACHE
-RUN composer clear-cache && composer install --no-dev --optimize-autoloader --no-scripts --prefer-dist
-
-# Copiar el resto de la aplicación
+# Copiar aplicación
 COPY . .
 
 # Configurar permisos
+RUN chown -R www-data:www-data storage bootstrap/cache
 RUN chmod -R 775 storage bootstrap/cache
 
-# Exponer puerto
-EXPOSE $PORT
+# Configurar document root
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
-# Comando de inicio
-CMD php artisan config:cache && php artisan route:cache && php -S 0.0.0.0:$PORT public/index.php
+EXPOSE 80
+
+# Comando simple - las migraciones se ejecutan en el Start Command
+CMD ["apache2-foreground"]
