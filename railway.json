@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "composer dump-autoload && php artisan config:clear && php artisan cache:clear && php artisan route:clear && php artisan view:clear && php artisan config:cache && php artisan route:cache && echo ✅ Caches cleared && php -S 0.0.0.0:$PORT -t public",
+    "startCommand": "echo \"=== Step 1: Composer dump ===\" && composer dump-autoload && echo \"=== Step 2: Clear caches ===\" && php artisan config:clear && php artisan cache:clear && php artisan route:clear && echo \"=== Step 3: Check Laravel ===\" && php artisan tinker --execute=\"echo 'Laravel OK';\" && echo \"=== Step 4: Cache config ===\" && php artisan config:cache && echo \"=== Step 5: Start server ===\" && php -S 0.0.0.0:$PORT -t public",
     "restartPolicyType": "ON_FAILURE"
   }
 }
