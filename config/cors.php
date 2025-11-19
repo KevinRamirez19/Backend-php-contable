@@ -16,13 +16,13 @@ return [
         'https://accounting-system-vert.vercel.app',
         'https://accounting-system-8z3nffqu2-cr7kevin132-3789s-projects.vercel.app',
         'https://accounting-system-git-main-cr7kevin132-3789s-projects.vercel.app',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:3001'
     ],
 
     'allowed_origins_patterns' => [
-        'https://.*\.vercel\.app',
-        'http://localhost:3000',
-        'http://127\.0\.0\.1:3000',
-        'http://localhost:3001'
+        'https://.*\.vercel\.app', // ✅ Este patrón está bien
     ],
 
     'allowed_headers' => ['*'],
@@ -31,5 +31,5 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true, // ✅ CAMBIAR A TRUE
 ];

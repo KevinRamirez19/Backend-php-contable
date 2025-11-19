@@ -1,5 +1,5 @@
 <?php
-
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     AuthController,
@@ -13,6 +13,7 @@ use App\Http\Controllers\{
     AsientoContableController,
     PartidaContableController,
     DashboardController
+    
 };
 
 /*
@@ -20,6 +21,15 @@ use App\Http\Controllers\{
 | API Routes nsoe hsdk
 |--------------------------------------------------------------------------
 */
+
+
+Route::get('/clear-cache', function () {
+    Artisan::call('optimize:clear');
+    return response()->json([
+        'status' => 'ok',
+        'message' => 'Cache cleared'
+    ]);
+});
 
 // 🔹 Rutas de autenticación (públicas)
 Route::prefix('auth')->group(function () {
