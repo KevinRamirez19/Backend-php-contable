@@ -33,7 +33,12 @@ RUN chmod -R 775 storage bootstrap/cache
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
-EXPOSE 80
+# Borrar caché de Laravel para que use el CORS actual
+RUN php artisan optimize:clear
+# Configurar puerto dinámico
+ENV PORT=8080
+EXPOSE 8080
+RUN sed -i "s/80/\${PORT}/g" /etc/apache2/ports.conf /etc/apache2/sites-available/*.conf
 
-# Comando simple - las migraciones se ejecutan en el Start Command
+# Iniciar Apache
 CMD ["apache2-foreground"]

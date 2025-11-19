@@ -1,3 +1,31 @@
+# ============================================
+#   CORS FIX – Desactivar headers de Apache
+# ============================================
+<IfModule mod_headers.c>
+    Header always unset Access-Control-Allow-Origin
+    Header always unset Access-Control-Allow-Headers
+    Header always unset Access-Control-Allow-Methods
+</IfModule>
+
+# ============================================
+#   CORS REAL – Laravel controla todo
+# ============================================
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "https://accounting-system-vert.vercel.app"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept"
+</IfModule>
+
+# OPTIONS (preflight) support
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+</IfModule>
+
+# ============================================
+#   Laravel Routing (original)
+# ============================================
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
@@ -20,7 +48,9 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
-# Security Headers
+# ============================================
+#   Security Headers
+# ============================================
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options nosniff
     Header set X-Frame-Options DENY
@@ -29,7 +59,9 @@
     Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# Compression
+# ============================================
+#   Compression
+# ============================================
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/plain
     AddOutputFilterByType DEFLATE text/html
@@ -43,7 +75,9 @@
     AddOutputFilterByType DEFLATE application/json
 </IfModule>
 
-# Cache Control
+# ============================================
+#   Cache Control
+# ============================================
 <IfModule mod_expires.c>
     ExpiresActive On
     
